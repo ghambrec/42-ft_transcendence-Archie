@@ -19,6 +19,11 @@ class Settings(BaseSettings):
     ai_service_port: int
     ai_service_api_key: str
 
+    # --- MAIL (development SMTP via Mailpit)
+    smtp_host: str = "mailpit"
+    smtp_port: int = Field(default=1025, ge=1, le=65535)
+    mail_from: str = "archie@example.test"
+
     # --- LANGFUSE
     langfuse_enabled: bool = False
     langfuse_host: str | None = None
