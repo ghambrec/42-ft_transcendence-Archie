@@ -71,3 +71,39 @@ CREATE TABLE IF NOT EXISTS ai_message_sources (
 	similiary_score REAL,
 	PRIMARY KEY(message_id, chunk_id)
 );
+
+
+CREATE TABLE IF NOT EXISTS ai_notifications (
+    id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+    document_id UUID NOT NULL
+        REFERENCES documents(id) ON DELETE CASCADE,
+    source VARCHAR(10) NOT NULL
+        CHECK (source IN ('ai', 'manual')),
+    title VARCHAR(255) NOT NULL,
+    message TEXT NOT NULL,
+    due_date DATE NOT NULL,
+    created_by UUID
+        REFERENCES users(id) ON DELETE SET NULL,
+    created_at TIMESTAMPTZ NOT NULL DEFAULT now(),
+    updated_at TIMESTAMPTZ NOT NULL DEFAULT now()
+);
+
+CREATE TABLE IF NOT EXISTS ai_notification_reminders (
+	id uuid PRIMARY KEY default gen_random_uuid(),
+	ai_notification_id uuid NOT NULL REFERENCES ai_notifications(id) on Delete Cascade, 
+	remind_at TIMESTAMPTZ NOT NULL,
+    sent_at TIMESTAMPTZ,
+	error_key text,
+	error_detail text,
+	next_attempt_at timestamptz
+);
+
+CREATE Index if not exists ai_notifications_document_id_idx 
+	on ai_notifications (document_id);
+
+Create index if not exists ai_notification_reminders_notification_id_idx
+	on ai_notification_reminders (ai_notification_id);
+
+Create index if not exists ai_notification_reminders_pending_idx
+	on ai_notification_reminders(remind_at)
+	where sent_at is NULL;
