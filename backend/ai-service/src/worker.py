@@ -20,7 +20,7 @@ from src.db import create_pool
 from src.ingestion import ingestor
 from src.storage.minio import MinioDocumentStore
 
-
+from src.notifications.sender import send_due_reminders
 # FUNCTIONS
 
 async def ingest_job(ctx: dict, doc_id: UUID) -> None:
@@ -47,7 +47,10 @@ async def on_shutdown(ctx: dict) -> None:
 
 
 class WorkerSettings:
-    functions = [func(ingest_job, max_tries=1)]
+    functions = [
+        func(ingest_job, max_tries=1),
+        func(send_due_reminders, max_tries=1)]
     on_startup = on_startup
     on_shutdown = on_shutdown
     redis_settings = RedisSettings.from_dsn(settings.redis_dsn)
+

@@ -5,16 +5,15 @@ from src.config import settings
 from uuid import UUID
 
 from src.notifications import service
-from datetime import date
+from datetime import date, datetime
 from pydantic import BaseModel, Field, AwareDatetime
-
 
 
 router = APIRouter(tags=["notififications"], dependencies=[Security(check_api_key)])
 
 
 class CreateNotificationRequest(BaseModel):
-    document_id: str = Field(UUID)
+    document_id: str = UUID
     title: str = Field(min_length=1, max_length=255)
     message: str = Field(min_length=1)
     due_date: date
