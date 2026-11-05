@@ -39,8 +39,11 @@ async def create_notification(
         )
     except service.NotificationAccessDeniedError as error: 
         raise HTTPException(
-            status_code=400, 
-            detail="No rights to create notificaion ",
+            status_code=403,
+            detail={
+                "code": "AI_NOTIFICATION_ACCESS_DENIED",
+                "retryable": False,
+            },
         ) from error
     return result 
 
