@@ -8,33 +8,39 @@ from src.notifications import service
 from datetime import date, datetime
 from pydantic import BaseModel, Field, AwareDatetime
 
+from src.notifications import create_notification_manual
 
 router = APIRouter(tags=["notififications"], dependencies=[Security(check_api_key)])
 
 
 class CreateNotificationRequest(BaseModel):
-    document_id: str = UUID
-    title: str = Field(min_length=1, max_length=255)
+    document_id: UUID
+    title: str = Field(strip_whitespace=True, min_length=1, max_length=255)
     message: str = Field(min_length=1)
     due_date: date
     remind_at: AwareDatetime
 
 
 @router.post("/notification", status_code=201, summary="create new notification for a user")
-async def create_notification(request: Request,
-                            body:CreateNotificationRequest,
-                            user_id: UUID = Depends(get_user_id)):
-    pool = request.app.state.db_pool
+async def create_notification(
+        request: Request,
+        body: CreateNotificationRequest,
+        user_id: UUID = Depends(get_user_id)
+    ):
     try:
-        notification_id = await notification_id.create_notification(pool, user_id)
-    except notification_id.UserNotFoundError:
-        logging.error("user not found")
-        raise HTTPException(status_code=400, detail="user does not exist")
-    return {"id": notification_id}
+        result = await service.create_notification_manual(
+            request= request.app.state.db_pool,
+            user_id= user_id,
+            document_id= body.document_id,
+            title = body.title,
+            message= body.message,
+            due_date= body.due_date,
+            remind_at= body.remind_at,
+        )
+    except service.NotificationAccessDeniedError as error: 
+        raise HTTPException(
+            status_code=400, 
+            detail="No rights to create notificaion ",
+        ) from error
+    return result 
 
-
-#@router.get("/notification", status_code=200, summary="get all notifications of one user")
-#async def get_all_notifications(request: Request,
-#                                body: CreateNotificationRequest,
-#                                user_id: UUID = Depends(get_user_id)):
-#    pool = request.app.state.db_pool
