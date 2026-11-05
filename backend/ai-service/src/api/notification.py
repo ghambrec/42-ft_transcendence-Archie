@@ -72,4 +72,3 @@ async def list_notifications(
         "offset": offset,
     }
 
-#@router.get("/notifications?document_id=<UUID>"

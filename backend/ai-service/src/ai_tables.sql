@@ -93,12 +93,16 @@ CREATE TABLE IF NOT EXISTS ai_notification_reminders (
 	ai_notification_id uuid NOT NULL REFERENCES ai_notifications(id) on Delete Cascade, 
 	remind_at TIMESTAMPTZ NOT NULL,
     sent_at TIMESTAMPTZ,
+    skipped_at TIMESTAMPTZ,
 	error_key text,
 	error_detail text,
 	next_attempt_at timestamptz
 );
 
-CREATE Index if not exists ai_notifications_document_id_idx 
+ALTER TABLE ai_notification_reminders
+    ADD COLUMN IF NOT EXISTS skipped_at TIMESTAMPTZ;
+
+CREATE Index if not exists ai_notifications_document_id_idx
 	on ai_notifications (document_id);
 
 Create index if not exists ai_notification_reminders_notification_id_idx
