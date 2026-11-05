@@ -26,9 +26,11 @@ async def get_document_recipients(
 ) -> list[asyncpg.Record]:
     return await connection.fetch(
         f"""WITH {DOCUMENT_ACCESS_CTE}
-        SELECT DISTINCT user_id, email FROM document_access
-        WHERE document_id = $1 AND perm_key = 'documents.read'
-        ORDER BY user_id
+        SELECT DISTINCT access.user_id, access.email, u.notification_active
+        FROM document_access AS access
+        JOIN users AS u ON u.id = access.user_id
+        WHERE access.document_id = $1 AND access.perm_key = 'documents.read'
+        ORDER BY access.user_id
         """, document_id,
     )
 
