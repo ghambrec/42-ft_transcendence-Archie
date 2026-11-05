@@ -21,6 +21,7 @@ export class EditUserPermissionsModal {
 	{ key: "documents.upload",	label: "groups.userPermissions.documentsUpload" },
 	{ key: "documents.update",	label: "groups.userPermissions.documentsUpdate" },
 	{ key: "documents.delete",	label: "groups.userPermissions.documentsDelete" },
+	{ key: "notifications.manage", label: "groups.userPermissions.notificationsManage" },
   ];
 
   protected get visiblePermissions() {

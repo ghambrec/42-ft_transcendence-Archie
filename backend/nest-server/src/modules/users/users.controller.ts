@@ -33,6 +33,7 @@ import { PatchAvatarResponseDto } from './dto/patch-avatar-response.dto';
 import { SelfOrAdminGuard } from '../permissions/guards/self-or-admin.guard';
 import { AdminRequiredGuard } from '../permissions/guards/admin-required.guard';
 import { ChangePasswordDto } from './dto/change-password.dto';
+import { NotificationSettingsDto } from './dto/notification-settings.dto';
 
 @ApiTags('users')
 @Controller('users')
@@ -41,6 +42,23 @@ export class UsersController {
     private readonly usersService: UsersService,
     private readonly usersFileService: UsersFileService,
   ) {}
+
+  @UseGuards(SessionAuthGuard)
+  @ApiOperation({ summary: 'Get own notification email preference' })
+  @Get('me/notification')
+  async getNotificationSettings(@Req() req: Request): Promise<NotificationSettingsDto> {
+    return this.usersService.getNotificationSettings(req.userId!);
+  }
+
+  @UseGuards(SessionAuthGuard)
+  @ApiOperation({ summary: 'Enable or disable own reminder emails' })
+  @Patch('me/notification')
+  async updateNotificationSettings(
+    @Req() req: Request,
+    @Body() dto: NotificationSettingsDto,
+  ): Promise<NotificationSettingsDto> {
+    return this.usersService.updateNotificationSettings(req.userId!, dto.active);
+  }
 
   @UseGuards(SessionAuthGuard, AdminRequiredGuard)
   @ApiOperation({ summary: 'Create new user' })
