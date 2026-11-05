@@ -1,5 +1,6 @@
 from fastapi import APIRouter, HTTPException, Request, Depends, Security
 from src.api.auth import check_api_key, get_user_id
+from fastapi import Query 
 import logging
 from src.config import settings
 from uuid import UUID
@@ -47,3 +48,28 @@ async def create_notification(
         ) from error
     return result 
 
+
+
+@router.get("/notifications" , status_code=200 , summary="List notifications of readable document")
+async def list_notifications(
+    request: Request,
+    user_id: UUID = Depends(get_user_id),
+    document_id: UUID | None = None,
+    limit: int = Query(default=20, ge=1, le=100),
+    offset: int = Query(default =0, ge=0),
+    ):
+    rows = await service.list_notifications(
+        pool=request.app.state.db_pool,
+        user_id=user_id,
+        document_id=document_id,
+        limit=limit,
+        offset=offset,
+    )
+    
+    return {
+        "data": [dict(row) for row in rows],
+        "limit": limit,
+        "offset": offset,
+    }
+
+#@router.get("/notifications?document_id=<UUID>"
