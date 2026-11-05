@@ -28,7 +28,7 @@ async def create_notification_manual(
 				connection=  connection,
 				user_id=user_id,
 				document_id= document_id,
-				permission = "documents.read",
+				permission = "notifications.manage",
 			)
 			if not allowed:
 				raise NotificationAccessDeniedError()

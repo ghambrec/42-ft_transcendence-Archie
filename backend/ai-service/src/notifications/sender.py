@@ -33,6 +33,12 @@ async def send_due_reminders(ctx: dict) -> None:
                         logger.warning("Reminder %s has no eligible recipients", reminder["id"])
                         continue
 
+                    recipients = [recipient for recipient in recipients if recipient["notification_active"]]
+                    if not recipients:
+                        await repository.mark_skipped(connection, reminder["id"])
+                        logger.info("Reminder %s skipped: all readers disabled reminder emails", reminder["id"])
+                        continue
+
                     try:
                         async with asyncio.timeout(settings.notification_delivery_timeout_seconds):
                             for recipient in recipients:
