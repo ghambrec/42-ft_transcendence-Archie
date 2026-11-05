@@ -4,21 +4,19 @@ import asyncio
 import logging
 from uuid import UUID
 
+from aiosmtplib.errors import SMTPException
+
 from src.document_access import get_document_recipients
 from src.notifications import repository
 from src.notifications.mailer import send_mail
+from src.config import settings
 
 logger = logging.getLogger(__name__)
-
-
-MAX_REMINDERS_PER_FUNCTIONCALL = 50
-DELIVERY_TIMEOUT_SECONDS = 60 # timeout of all resicpents of one duo reminder togehter 
-
 
 async def send_due_reminders(ctx: dict) -> None:
     pool = ctx["db_pool"]
     attempted: list[UUID] = []
-    for _ in range(MAX_REMINDERS_PER_FUNCTIONCALL):
+    for attempts_index in range(settings.notification_batch_size):
         try:
             async with pool.acquire() as connection:
                 async with connection.transaction():
@@ -36,11 +34,10 @@ async def send_due_reminders(ctx: dict) -> None:
                         continue
 
                     try:
-                        async with asyncio.timeout(DELIVERY_TIMEOUT_SECONDS):
+                        async with asyncio.timeout(settings.notification_delivery_timeout_seconds):
                             for recipient in recipients:
                                 await send_mail(recipient["email"], reminder["title"], reminder["message"])
-                    except Exception as error:
-                        # SMTP responses may contain addresses or other private data.
+                    except (SMTPException, OSError, TimeoutError) as error:
                         await repository.mark_failed(
                             connection, reminder["id"], "smtp_error", type(error).__name__,
                         )
@@ -49,6 +46,5 @@ async def send_due_reminders(ctx: dict) -> None:
                         await repository.mark_sent(connection, reminder["id"])
                         logger.info("Reminder %s sent to %d users", reminder["id"], len(recipients))
         except Exception:
-            # Roll back a failed reminder and continue with the others. Cancellation
-            # inherits BaseException and deliberately propagates to arq.
             logger.exception("Reminder processing failed")
+            raise

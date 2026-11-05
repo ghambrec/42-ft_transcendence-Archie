@@ -8,7 +8,7 @@ from src.notifications import service
 from datetime import date, datetime
 from pydantic import BaseModel, Field, AwareDatetime
 
-from src.notifications import create_notification_manual
+from src.notifications import service
 
 router = APIRouter(tags=["notififications"], dependencies=[Security(check_api_key)])
 
@@ -29,13 +29,13 @@ async def create_notification(
     ):
     try:
         result = await service.create_notification_manual(
-            request= request.app.state.db_pool,
-            user_id= user_id,
-            document_id= body.document_id,
-            title = body.title,
-            message= body.message,
-            due_date= body.due_date,
-            remind_at= body.remind_at,
+            pool=request.app.state.db_pool,
+            user_id=user_id,
+            document_id=body.document_id,
+            title=body.title,
+            message=body.message,
+            due_date=body.due_date,
+            remind_at=body.remind_at,
         )
     except service.NotificationAccessDeniedError as error: 
         raise HTTPException(
