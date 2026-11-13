@@ -1,5 +1,5 @@
 import secrets
-from fastapi import Security, HTTPException, Header
+from fastapi import Depends, Security, HTTPException, Header, Request
 from fastapi.security import APIKeyHeader
 from uuid import UUID
 
@@ -17,3 +17,25 @@ async def get_user_id(user_id: UUID | None = Header(default=None, alias="X-User-
     if user_id is None:
         raise HTTPException(status_code=400, detail="missing X-User-Id header")
     return user_id
+
+
+async def require_admin(request: Request, user_id: UUID = Depends(get_user_id)) -> None:
+    """Match NestJS's admin check for trusted service-to-service requests."""
+    allowed = await request.app.state.db_pool.fetchval(
+        """
+        SELECT EXISTS (
+            SELECT 1
+            FROM user_permission AS up
+            JOIN users AS u ON u.id = up.user_id
+            JOIN permissions AS p ON p.id = up.permission_id
+            WHERE up.user_id = $1 AND p.perm_key = 'admin'
+              AND u.deleted_at IS NULL AND u.is_active = true
+        )
+        """,
+        user_id,
+    )
+    if not allowed:
+        raise HTTPException(
+            status_code=403,
+            detail={"code": "AI_NOTIFICATION_ACCESS_DENIED", "retryable": False},
+        )

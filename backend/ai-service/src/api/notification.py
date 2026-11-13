@@ -1,5 +1,5 @@
 from fastapi import APIRouter, HTTPException, Request, Depends, Security
-from src.api.auth import check_api_key, get_user_id
+from src.api.auth import check_api_key, get_user_id, require_admin
 from fastapi import Query 
 import logging
 from src.config import settings
@@ -8,6 +8,7 @@ from uuid import UUID
 from src.notifications import service
 from datetime import date, datetime
 from pydantic import BaseModel, Field, AwareDatetime
+from redis.exceptions import RedisError
 
 from src.notifications import service
 
@@ -72,3 +73,29 @@ async def list_notifications(
         "offset": offset,
     }
 
+class QueuedReminderDelivery(BaseModel):
+    job_id: str
+
+
+@router.post(
+    "/notifications/send-due",
+    status_code=202,
+    summary="Queue due notification reminders (admin only)",
+    response_model=QueuedReminderDelivery,
+    dependencies=[Depends(require_admin)],
+)
+async def send_due(request: Request):
+    """Accept a delivery job; the worker performs the actual email sending."""
+    try:
+        job = await request.app.state.arq_pool.enqueue_job("send_due_reminders")
+    except (RedisError, OSError) as error:
+        raise HTTPException(
+            status_code=503,
+            detail={"code": "AI_SERVICE_UNAVAILABLE", "retryable": True},
+        ) from error
+    if job is None:
+        raise HTTPException(
+            status_code=503,
+            detail={"code": "AI_SERVICE_UNAVAILABLE", "retryable": True},
+        )
+    return {"job_id": job.job_id}
