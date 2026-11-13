@@ -407,6 +407,7 @@
 			"documentsUpload": "Subir documentos",
 			"documentsUpdate": "Actualizar documentos",
 			"documentsDelete": "Eliminar documentos",
+			"notificationsManage": "Gestionar notificaciones compartidas",
 			"btnCancel": "Cancelar",
 			"btnSave": "Guardar",
 			"errors": {

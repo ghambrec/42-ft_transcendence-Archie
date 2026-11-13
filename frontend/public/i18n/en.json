@@ -404,6 +404,7 @@
 			"documentsUpload": "Upload documents",
 			"documentsUpdate": "Update documents",
 			"documentsDelete": "Delete documents",
+			"notificationsManage": "Manage shared notifications",
 			"btnCancel": "Cancel",
 			"btnSave": "Save",
 			"errors": {
