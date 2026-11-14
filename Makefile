@@ -1,38 +1,41 @@
 COMPOSE := docker compose -f ./docker-compose.yml
 COMPOSE_DEV := ${COMPOSE} -f ./docker-compose.dev.yml
+# all services of prod and dev, used for cleanup
+COMPOSE_ALL := ${COMPOSE_DEV} --profile monitoring
 COMPOSE_TEST := docker compose -p documents-system-test -f ./docker-compose.test.yml
 PNPM := pnpm
 
 NEST_DIR := backend/nest-server
-FRONT_DIR := frontend/
-FRONTEND_DIR := frontend
+FRONT_DIR := frontend
 
 
-
-
+# --- prod ---
 up:
 	${COMPOSE} --profile monitoring up --build
 
+# --- dev (hot reload, local ports) ---
 dev:
 	${COMPOSE_DEV} --profile monitoring up
 
-down:
-	${COMPOSE_DEV} down
-
-clean:
-	${COMPOSE} down --rmi all
-
-fclean:
-	${COMPOSE} down -v --rmi all
-
-re:
-	make clean
-	make up
-
-monitoring: 
+monitoring:
 	${COMPOSE} --profile monitoring up -d \
 	grafana prometheus cadvisor node-exporter
 
+# --- cleanup ---
+down:
+	${COMPOSE_ALL} down --remove-orphans
+
+clean:
+	${COMPOSE_ALL} down --remove-orphans --rmi all
+
+fclean:
+	${COMPOSE_ALL} down --remove-orphans -v --rmi all
+
+re:
+	$(MAKE) clean
+	$(MAKE) up
+
+# --- tests ---
 unit:
 	cd $(NEST_DIR) && $(PNPM) test || echo -n
 
@@ -46,9 +49,9 @@ test:
 	exit $$status
 
 test-clean:
-	${COMPOSE_TEST} down -v --rmi all 
+	${COMPOSE_TEST} down -v --rmi all
 
-# Github actions
+# --- github actions ---
 deps-nest:
 	cd $(NEST_DIR) && $(PNPM) install --frozen-lockfile
 deps-front:
@@ -60,4 +63,5 @@ build-front:
 	cd $(FRONT_DIR) && $(PNPM) run build
 
 
-.PHONY: monitoring re clean fclean down up dev deps-nest deps-front build-nest build-front test-clean
+.PHONY: up dev monitoring down clean fclean re unit test test-clean \
+	deps-nest deps-front build-nest build-front
