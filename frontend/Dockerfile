@@ -1,4 +1,4 @@
-FROM node:24-alpine AS build
+FROM node:24-alpine AS deps
 
 WORKDIR /app
 
@@ -9,6 +9,9 @@ ENV CI=true
 COPY package.json pnpm-lock.yaml pnpm-workspace.yaml ./
 
 RUN pnpm install --frozen-lockfile
+
+
+FROM deps AS build
 
 COPY . .
 

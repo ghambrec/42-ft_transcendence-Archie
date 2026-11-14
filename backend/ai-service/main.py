@@ -20,7 +20,7 @@ if __name__ == "__main__":
         "src.app:app",
         host="0.0.0.0",
         port=settings.ai_service_port,
-        reload=True,
+        reload=settings.ai_service_reload,
     )
 
 # run with:

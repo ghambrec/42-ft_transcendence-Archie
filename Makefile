@@ -1,4 +1,5 @@
 COMPOSE := docker compose -f ./docker-compose.yml
+COMPOSE_DEV := ${COMPOSE} -f ./docker-compose.dev.yml
 COMPOSE_TEST := docker compose -p documents-system-test -f ./docker-compose.test.yml
 PNPM := pnpm
 
@@ -10,10 +11,13 @@ FRONTEND_DIR := frontend
 
 
 up:
-	${COMPOSE} --profile monitoring up
+	${COMPOSE} --profile monitoring up --build
+
+dev:
+	${COMPOSE_DEV} --profile monitoring up
 
 down:
-	${COMPOSE} down
+	${COMPOSE_DEV} down
 
 clean:
 	${COMPOSE} down --rmi all
@@ -56,4 +60,4 @@ build-front:
 	cd $(FRONT_DIR) && $(PNPM) run build
 
 
-.PHONY: monitoring re clean fclean down up deps-nest deps-front build-nest build-front test-clean
+.PHONY: monitoring re clean fclean down up dev deps-nest deps-front build-nest build-front test-clean

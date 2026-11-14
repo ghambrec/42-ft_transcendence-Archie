@@ -1,0 +1,48 @@
+# dev override, use with: make dev
+services:
+  nest-server:
+    command: ["sh", "-c", "pnpm run migration:run && exec pnpm run start:dev"]
+    volumes:
+      - ./backend/nest-server:/app
+      - nest-server-node-modules:/app/node_modules
+
+  ai-service:
+    environment:
+      AI_SERVICE_RELOAD: "true"
+    volumes:
+      - ./backend/ai-service:/app
+      - ai-service-venv:/app/.venv
+
+  ai-service-worker:
+    command: ["uv", "run", "watchfiles", "uv run arq src.worker.WorkerSettings", "src"]
+    volumes:
+      - ./backend/ai-service:/app
+      - ai-service-venv:/app/.venv
+
+  frontend-dev:
+    build:
+      context: ./frontend
+      dockerfile: Dockerfile
+      target: deps
+    container_name: frontend-dev
+    restart: unless-stopped
+    command: ["sh", "-c", "pnpm start --host 0.0.0.0"]
+    volumes:
+      - ./frontend:/app
+      - frontend-node-modules:/app/node_modules
+    networks:
+      - archie
+
+  # plain caddy, proxies to ng serve instead of serving the build
+  caddy:
+    build: !reset null
+    image: caddy:2-alpine
+    volumes:
+      - ./frontend/Caddyfile.dev:/etc/caddy/Caddyfile:ro
+    depends_on:
+      - frontend-dev
+
+volumes:
+  nest-server-node-modules:
+  frontend-node-modules:
+  ai-service-venv:

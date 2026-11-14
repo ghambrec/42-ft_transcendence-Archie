@@ -95,9 +95,6 @@ services:
    restart: unless-stopped
    ports:
      - "3000:3000"
-   volumes:
-     - ./backend/nest-server:/app
-     - nest-server-node-modules:/app/node_modules
    networks:
      - archie
    env_file: "./env/.env"
@@ -134,9 +131,6 @@ services:
     restart: unless-stopped
     ports:
       - "5001:5001"
-    volumes:
-      - ./backend/ai-service:/app
-      - ai-service-venv:/app/.venv
     networks:
       - archie
     env_file: "./env/.env"
@@ -162,10 +156,10 @@ services:
       dockerfile: Dockerfile
     container_name: ai-service-worker
     restart: unless-stopped
-    command: ["uv", "run", "watchfiles", "uv run arq src.worker.WorkerSettings", "src"]
-    volumes:
-      - ./backend/ai-service:/app
-      - ai-service-venv:/app/.venv
+    command: ["uv", "run", "arq", "src.worker.WorkerSettings"]
+    # worker has no http server, dockerfile healthcheck would fail
+    healthcheck:
+      disable: true
     networks:
       - archie
     env_file: "./env/.env"
@@ -270,9 +264,7 @@ volumes:
   redis-data:
   postgres_data:
   minio_data:
-  nest-server-node-modules:
   ollama_data:
-  ai-service-venv:
   grafana_data:
   prometheus_data:
   caddy_data:
