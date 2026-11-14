@@ -1,6 +1,16 @@
 # dev override, use with: make dev
 services:
+  postgres:
+    ports:
+      - "127.0.0.1:5432:5432"
+
+  minio:
+    ports:
+      - "127.0.0.1:9001:9001"
+
   nest-server:
+    ports:
+      - "127.0.0.1:3000:3000"
     command: ["sh", "-c", "pnpm run migration:run && exec pnpm run start:dev"]
     volumes:
       - ./backend/nest-server:/app
@@ -31,7 +41,7 @@ services:
       - ./frontend:/app
       - frontend-node-modules:/app/node_modules
     networks:
-      - archie
+      - edge
 
   # plain caddy, proxies to ng serve instead of serving the build
   caddy:
