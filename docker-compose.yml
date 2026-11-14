@@ -111,36 +111,20 @@ services:
     #  ai-service:
     #    condition: service_healthy
 
-  frontend:
+  caddy:
     build:
       context: ./frontend
       dockerfile: Dockerfile
-    container_name: frontend
-    restart: unless-stopped
-    ports:
-      - "4200:4200"
-    volumes:
-      - ./frontend:/app
-      - frontend-node-modules:/app/node_modules
-    networks:
-      - archie
-    depends_on:
-      - nest-server
-
-  caddy:
-    image: caddy:2-alpine
     container_name: caddy
     restart: unless-stopped
     ports:
       - "443:443"
     volumes:
-      - ./backend/caddy/Caddyfile:/etc/caddy/Caddyfile:ro
       - caddy_data:/data
     networks:
       - archie
     depends_on:
       - nest-server
-      - frontend
 
   ai-service:
     build:
@@ -287,7 +271,6 @@ volumes:
   postgres_data:
   minio_data:
   nest-server-node-modules:
-  frontend-node-modules:
   ollama_data:
   ai-service-venv:
   grafana_data:

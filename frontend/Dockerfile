@@ -1,4 +1,4 @@
-FROM node:24-alpine
+FROM node:24-alpine AS build
 
 WORKDIR /app
 
@@ -12,33 +12,12 @@ RUN pnpm install --frozen-lockfile
 
 COPY . .
 
-EXPOSE 4200
-
-CMD ["sh", "-c", "pnpm start --host 0.0.0.0"]
+RUN pnpm run build
 
 
+FROM caddy:2-alpine
 
+COPY Caddyfile /etc/caddy/Caddyfile
+COPY --from=build /app/dist/frontend/browser /srv
 
-
-# --- PROD Server (port in docker-compose umstellen auf nginx 80) --- #
-# --- auch keine volumes mehr dann nötig?
-
-	# FROM node:24-alpine AS build
-
-	# RUN corepack enable
-
-	# ENV CI=true
-
-	# WORKDIR /app
-
-	# COPY package.json pnpm-lock.yaml pnpm-workspace.yaml ./
-	# RUN pnpm install
-
-	# COPY . .
-	# RUN pnpm run build
-
-	# FROM nginx:alpine
-
-	# COPY --from=build /app/dist/frontend/browser /usr/share/nginx/html
-
-	# EXPOSE 80
+EXPOSE 443
