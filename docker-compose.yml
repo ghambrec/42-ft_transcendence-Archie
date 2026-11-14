@@ -32,18 +32,6 @@ services:
     networks:
       - backend
 
-  adminer:
-    image: adminer:latest
-    container_name: adminer
-    restart: unless-stopped
-    ports:
-      - "8080:8080"
-    networks:
-      - backend
-    depends_on:
-      postgres:
-        condition: service_healthy
-
   minio:
    image: pgsty/minio:RELEASE.2026-06-18T00-00-00Z
    container_name: minio
@@ -199,16 +187,18 @@ services:
   grafana: 
     image: grafana/grafana
     profiles: [monitoring]
-    ports:
-    - "3001:3000"
     volumes:
     - grafana_data:/var/lib/grafana
     - ./monitoring/grafana/provisioning:/etc/grafana/provisioning:ro
     - ./monitoring/grafana/dashboards:/etc/grafana/dashboards:ro
     networks:
+      - edge
       - monitoring
     env_file:
       - "./env/.env"
+    environment:
+      GF_SERVER_ROOT_URL: https://localhost/grafana/
+      GF_SERVER_SERVE_FROM_SUB_PATH: "true"
 
   prometheus:
     image: prom/prometheus:latest
@@ -218,8 +208,6 @@ services:
     volumes:
       - ./monitoring/prometheus.yml:/etc/prometheus/prometheus.yml:ro
       - prometheus_data:/prometheus
-    extra_hosts:
-      - "host.docker.internal:host-gateway"
     networks:
       - monitoring
 
@@ -241,12 +229,13 @@ services:
   node-exporter:
     image: quay.io/prometheus/node-exporter:latest
     profiles: [monitoring]
-    network_mode: host
     pid: host
     command:
       - "--path.rootfs=/host"
     volumes:
       - /:/host:ro,rslave
+    networks:
+      - monitoring
 
 networks:
   edge:

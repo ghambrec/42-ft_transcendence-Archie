@@ -6,6 +6,11 @@ localhost {
 		reverse_proxy nest-server:3000
 	}
 
+	@grafana path /grafana /grafana/*
+	handle @grafana {
+		reverse_proxy grafana:3000
+	}
+
 	# fallback
 	handle {
 		root * /srv

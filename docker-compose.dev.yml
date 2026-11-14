@@ -43,6 +43,18 @@ services:
     networks:
       - edge
 
+  adminer:
+    image: adminer:latest
+    container_name: adminer
+    restart: unless-stopped
+    ports:
+      - "127.0.0.1:8080:8080"
+    networks:
+      - backend
+    depends_on:
+      postgres:
+        condition: service_healthy
+
   # plain caddy, proxies to ng serve instead of serving the build
   caddy:
     build: !reset null
