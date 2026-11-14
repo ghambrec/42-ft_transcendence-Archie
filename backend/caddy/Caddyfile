@@ -1,0 +1,10 @@
+localhost {
+	@api path /api /api/*
+	handle @api {
+		reverse_proxy nest-server:3000
+	}
+
+	handle {
+		reverse_proxy frontend:4200
+	}
+}

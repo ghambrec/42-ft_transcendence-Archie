@@ -1,4 +1,4 @@
 export const environment = {
-	apiUrl: 'http://localhost:3000',
+	apiUrl: '/api',
 	chatRequestTimeoutMs: 200000,
 };

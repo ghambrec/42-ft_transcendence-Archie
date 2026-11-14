@@ -127,6 +127,21 @@ services:
     depends_on:
       - nest-server
 
+  caddy:
+    image: caddy:2-alpine
+    container_name: caddy
+    restart: unless-stopped
+    ports:
+      - "443:443"
+    volumes:
+      - ./backend/caddy/Caddyfile:/etc/caddy/Caddyfile:ro
+      - caddy_data:/data
+    networks:
+      - archie
+    depends_on:
+      - nest-server
+      - frontend
+
   ai-service:
     build:
       context: ./backend/ai-service
@@ -277,3 +292,4 @@ volumes:
   ai-service-venv:
   grafana_data:
   prometheus_data:
+  caddy_data:

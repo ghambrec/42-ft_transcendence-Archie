@@ -19,6 +19,8 @@ async function bootstrap() {
   
   app.use(cookieParser());
 
+  app.setGlobalPrefix('api', { exclude: ['metrics'] });
+
   app.enableCors({
 	  origin: 'http://localhost:4200',
     credentials: true,
@@ -40,7 +42,7 @@ async function bootstrap() {
     .setVersion('1.0')
     .build();
   const documentFactory = () => SwaggerModule.createDocument(app, config);
-  SwaggerModule.setup('api', app, documentFactory, {
+  SwaggerModule.setup('api/docs', app, documentFactory, {
 	swaggerOptions: {
 		defaultModelsExpandDepth: -1,
 		tagsSorter: 'alpha',
