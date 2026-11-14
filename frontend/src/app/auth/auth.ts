@@ -2,6 +2,7 @@ import { inject, Service, signal, computed } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
 import { environment } from '../../environments/environment';
 import { firstValueFrom } from 'rxjs';
+import { TranslocoService } from '@jsverse/transloco';
 import type { SupportedLanguage } from '../core/i18n/supported-language'
 import { CurrentUser, Users } from '../users/users';
 
@@ -24,6 +25,7 @@ export class Auth {
 	private readonly http = inject(HttpClient);
 	private readonly baseUrl = `${environment.apiUrl}/auth`;
 	private readonly usersService = inject(Users)
+	private readonly translocoService = inject(TranslocoService);
 
 
 	login(body: LoginRequest) {
@@ -42,6 +44,7 @@ export class Auth {
 		try {
 			const { user } = await firstValueFrom(this.http.get<{ user: CurrentUser | null}>(`${this.baseUrl}/session`, { withCredentials: true}));
 			this.usersService.currentUser.set(user);
+			if (user) this.translocoService.setActiveLang(user.preferredLanguage);
 			return user !== null;
 		} catch {
 			this.usersService.currentUser.set(null);
