@@ -1,0 +1,15 @@
+localhost {
+	encode gzip
+
+	@api path /api /api/*
+	handle @api {
+		reverse_proxy nest-server:3000
+	}
+
+	# fallback
+	handle {
+		root * /srv
+		try_files {path} /index.html
+		file_server
+	}
+}
