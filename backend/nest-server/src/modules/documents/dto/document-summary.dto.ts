@@ -3,6 +3,7 @@ import { GroupMinimalDto } from '../../user-groups/dto/group-minimal.dto';
 import { DocumentAiStatus } from './document-ai-status.enum';
 import { DocumentUploadedByDto } from './document-uploaded-by.dto';
 import { DocumentTagDto } from './document-tag.dto';
+import { DocumentMatchDto } from './document-match.dto';
 
 export class DocumentSummaryDto {
   @ApiProperty()
@@ -46,4 +47,7 @@ export class DocumentSummaryDto {
 
   @ApiProperty()
   previewable!: boolean;
+
+  @ApiPropertyOptional({ type: DocumentMatchDto })
+  match?: DocumentMatchDto;
 }

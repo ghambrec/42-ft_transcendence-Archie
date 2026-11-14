@@ -12,7 +12,7 @@ import { Tag } from '../tags/entities/tag.entity';
 import { DocumentTag } from '../tags/entities/document-tag.entity';
 import { DocumentAiStatus } from './dto/document-ai-status.enum';
 import { UploadResponseDto } from './dto/upload-response.dto';
-import { GetDocumentsQueryDto } from './dto/get-documents-query.dto';
+import { DocumentSortField, GetDocumentsQueryDto, SortOrder } from './dto/get-documents-query.dto';
 import { GetDocumentsResponseDto } from './dto/get-documents-response.dto';
 import { DocumentSummaryDto } from './dto/document-summary.dto';
 import { DocumentDownloadStreamDto } from './dto/document-download-stream.dto';
@@ -28,10 +28,47 @@ import { ConfirmSuggestedTagsResponseDto } from './dto/confirm-suggested-tags-re
 import { DocumentFileValidationService } from './document-file-validation.service';
 import { PermissionsService } from '../permissions/permissions.service';
 import { DocumentPermission } from '../permissions/permission-keys';
-import { PREVIEWABLE_MIME_TYPES } from './document-file.constants';
+import { MIME_TYPES_BY_CATEGORY, PREVIEWABLE_MIME_TYPES } from './document-file.constants';
+import {
+  buildBestChunkSubquery,
+  buildMatch,
+  buildScoreExpression,
+  buildSearchParameters,
+  buildTermCondition,
+  parseSearchTerms,
+} from './document-search';
 import { RenameDocumentResponseDto } from './dto/rename-document-response.dto';
 
 const DOCUMENTS_BUCKET = 'documents';
+
+// sortierung: feld -> sql und standard richtung
+const SORT_COLUMNS: Record<
+  Exclude<DocumentSortField, DocumentSortField.Relevance>,
+  { expression: string; defaultOrder: SortOrder }
+> = {
+  [DocumentSortField.Name]: { expression: 'LOWER(document.filename)', defaultOrder: SortOrder.Asc },
+  [DocumentSortField.CreatedAt]: { expression: 'document.createdAt', defaultOrder: SortOrder.Desc },
+  [DocumentSortField.Size]: { expression: 'document.sizeBytes', defaultOrder: SortOrder.Desc },
+};
+
+// zeile aus createSummaryQuery
+interface DocumentSummaryRow {
+  id: string;
+  filename: string;
+  mimeType: string;
+  sizeBytes: string;
+  createdAt: Date;
+  updatedAt: Date;
+  uploaderId: string;
+  uploaderName: string;
+  aiStatus: DocumentAiStatus | null;
+  aiSummary: string | null;
+  language: string | null;
+  aiErrorKey: string | null;
+  groups: { id: string; name: string }[];
+  tags: { id: string; name: string; label: string }[];
+  matchChunk?: string | null;
+}
 
 @Injectable()
 export class DocumentsService {
@@ -109,101 +146,60 @@ export class DocumentsService {
   }
 
   async findAll(userId: string, query: GetDocumentsQueryDto): Promise<GetDocumentsResponseDto> {
-    const { page, limit, tagId, includeDescendants} = query;
+    const { page, limit } = query;
+    const terms = parseSearchTerms(query.q);
+    const searchParameters = buildSearchParameters(terms);
+    const searchParams = Object.keys(searchParameters);
 
-    this.logger.log({ userId, page, limit }, 'Listing documents');
+    this.logger.log({ userId, page, limit, searchTerms: terms.length }, 'Listing documents');
 
-    const baseQuery = await this.createReadableDocumentsQuery(userId);
+    // 1. welche dokumente: leserecht, filter, textsuche
+    const baseQuery = await this.createReadableDocumentsQuery(userId, query.groupId);
 
     if (!baseQuery) {
       this.logger.log({ userId, total: 0 }, 'Documents listed successfully');
       return { data: [], page, limit, total: 0, totalPages: 0 };
     }
 
-    if (tagId) {
-      baseQuery.andWhere((qb) => {
-        const subQuery = qb
-          .subQuery()
-          .select('1')
-          .from(DocumentTag, 'filterDocumentTag')
-          .innerJoin(Tag, 'filterTag', 'filterTag.id = filterDocumentTag.tagId')
-          .where('filterDocumentTag.documentId = document.id')
-          .andWhere(
-            includeDescendants
-              ? '(filterTag.id = :tagId OR filterTag.parentId = :tagId)'
-              : 'filterTag.id = :tagId',
-            { tagId },
-          )
-          .getQuery();
-        return `EXISTS ${subQuery}`;
-      });
+    this.applyFilters(baseQuery, query);
+
+    for (const param of searchParams) {
+      baseQuery.andWhere(buildTermCondition(param));
     }
+    baseQuery.setParameters(searchParameters);
 
     const total = await baseQuery.getCount();
 
-    const raw = await baseQuery
-      .clone()
-      .innerJoin(User, 'uploader', 'uploader.id = document.uploadedBy')
-      .leftJoin(DocumentGroup, 'documentGroup', 'documentGroup.documentId = document.id')
-      .leftJoin(Group, 'group', 'group.id = documentGroup.groupId')
-      .leftJoin(DocumentTag, 'documentTag', 'documentTag.documentId = document.id')
-      .leftJoin(Tag, 'tag', 'tag.id = documentTag.tagId')
-      .leftJoin('ai_documents', 'aiDocument', '"aiDocument"."id" = document.id')
-      .select([
-        'document.id AS "id"',
-        'document.filename AS "filename"',
-        'document.mimeType AS "mimeType"',
-        'document.sizeBytes AS "sizeBytes"',
-        'document.createdAt AS "createdAt"',
-        'document.updatedAt AS "updatedAt"',
-        'uploader.id AS "uploaderId"',
-        'uploader.displayName AS "uploaderName"',
-        '"aiDocument"."status" AS "aiStatus"',
-        '"aiDocument"."ai_summary" AS "aiSummary"',
-        '"aiDocument"."language" AS "language"',
-        '"aiDocument"."error_key" AS "aiErrorKey"',
-      ])
-      .addSelect(
-        `COALESCE(
-          json_agg(DISTINCT jsonb_build_object('id', "group"."id", 'name', "group"."name"))
-            FILTER (WHERE "group"."id" IS NOT NULL),
-          '[]'
-        )`,
-        'groups',
-      )
-      .addSelect(
-        `COALESCE(
-          json_agg(DISTINCT jsonb_build_object('id', "tag"."id", 'name', "tag"."name", 'label', "tag"."label"))
-            FILTER (WHERE "tag"."id" IS NOT NULL),
-          '[]'
-        )`,
-        'tags',
-      )
-      .groupBy('document.id')
-      .addGroupBy('uploader.id')
-      .addGroupBy('"aiDocument"."id"')
-      .orderBy('LOWER(document.filename)', 'ASC')
-      .addOrderBy('document.id', 'ASC')
+    // 2. welche seite: nur die ids
+    const pageQuery = baseQuery.clone().select('document.id', 'id');
+    this.applySorting(pageQuery, query, searchParams);
+
+    const pageRows = await pageQuery
       .offset((page - 1) * limit)
       .limit(limit)
-      .getRawMany();
+      .getRawMany<{ id: string }>();
+    const ids = pageRows.map((row) => row.id);
 
-    const documents = raw.map((row) => ({
-      id: row.id,
-      filename: row.filename,
-      mimeType: row.mimeType,
-      sizeBytes: Number(row.sizeBytes),
-      createdAt: row.createdAt,
-      updatedAt: row.updatedAt,
-      uploadedBy: { id: row.uploaderId, name: row.uploaderName },
-      groups: row.groups,
-      tags: row.tags,
-      aiStatus: row.aiStatus ?? DocumentAiStatus.NOT_STARTED,
-      aiSummary: row.aiSummary ?? undefined,
-      language: row.language ?? '',
-      aiErrorKey: row.aiErrorKey ?? null,
-	  previewable: PREVIEWABLE_MIME_TYPES.has(row.mimeType),
-    }));
+    // 3. daten fuer die ids der seite laden
+    let documents: DocumentSummaryDto[] = [];
+    if (ids.length > 0) {
+      const summaryQuery = this.createSummaryQuery().where('document.id IN (:...ids)', { ids });
+
+      if (searchParams.length > 0) {
+        summaryQuery
+          .addSelect(buildBestChunkSubquery(searchParams), 'matchChunk')
+          .setParameters(searchParameters);
+      }
+
+      const rows = await summaryQuery.getRawMany<DocumentSummaryRow>();
+      const rowsById = new Map(rows.map((row) => [row.id, row]));
+
+      // IN behaelt die reihenfolge nicht, deshalb wieder nach ids sortieren
+      documents = ids
+        .map((id) => rowsById.get(id))
+        .filter((row): row is DocumentSummaryRow => row !== undefined)
+        .map((row) => this.toSummaryDto(row, terms));
+    }
 
     this.logger.log({ userId, total }, 'Documents listed successfully');
 
@@ -221,49 +217,9 @@ export class DocumentsService {
     this.logger.log({ userId, id }, 'Find one document');
 
     // Access is checked by DocumentPermissionsGuard (documents.read)
-    const raw = await this.documentsRepository
-      .createQueryBuilder('document')
-      .innerJoin(User, 'uploader', 'uploader.id = document.uploadedBy')
-      .leftJoin(DocumentGroup, 'documentGroup', 'documentGroup.documentId = document.id')
-      .leftJoin(Group, 'group', 'group.id = documentGroup.groupId')
-      .leftJoin(DocumentTag, 'documentTag', 'documentTag.documentId = document.id')
-      .leftJoin(Tag, 'tag', 'tag.id = documentTag.tagId')
-      .leftJoin('ai_documents', 'aiDocument', '"aiDocument"."id" = document.id')
+    const raw = await this.createSummaryQuery()
       .where('document.id = :id', { id })
-      .select([
-        'document.id AS "id"',
-        'document.filename AS "filename"',
-        'document.mimeType AS "mimeType"',
-        'document.sizeBytes AS "sizeBytes"',
-        'document.createdAt AS "createdAt"',
-        'document.updatedAt AS "updatedAt"',
-        'uploader.id AS "uploaderId"',
-        'uploader.displayName AS "uploaderName"',
-        '"aiDocument"."status" AS "aiStatus"',
-        '"aiDocument"."ai_summary" AS "aiSummary"',
-        '"aiDocument"."language" AS "language"',
-        '"aiDocument"."error_key" AS "aiErrorKey"',
-      ])
-      .addSelect(
-        `COALESCE(
-          json_agg(DISTINCT jsonb_build_object('id', "group"."id", 'name', "group"."name"))
-            FILTER (WHERE "group"."id" IS NOT NULL),
-          '[]'
-        )`,
-        'groups',
-      )
-      .addSelect(
-        `COALESCE(
-          json_agg(DISTINCT jsonb_build_object('id', "tag"."id", 'name', "tag"."name", 'label', "tag"."label"))
-            FILTER (WHERE "tag"."id" IS NOT NULL),
-          '[]'
-        )`,
-        'tags',
-      )
-      .groupBy('document.id')
-      .addGroupBy('uploader.id')
-      .addGroupBy('"aiDocument"."id"')
-      .getRawOne();
+      .getRawOne<DocumentSummaryRow>();
 
     if (!raw) {
       throw new ApplicationException(ErrorCode.DocumentNotFound);
@@ -271,22 +227,7 @@ export class DocumentsService {
 
     this.logger.log({ userId, id }, 'One document found');
 
-    return {
-      id: raw.id,
-      filename: raw.filename,
-      mimeType: raw.mimeType,
-      sizeBytes: Number(raw.sizeBytes),
-      createdAt: raw.createdAt,
-      updatedAt: raw.updatedAt,
-      uploadedBy: { id: raw.uploaderId, name: raw.uploaderName },
-      groups: raw.groups,
-      tags: raw.tags,
-      aiStatus: raw.aiStatus ?? DocumentAiStatus.NOT_STARTED,
-      aiSummary: raw.aiSummary ?? undefined,
-      language: raw.language ?? '',
-      aiErrorKey: raw.aiErrorKey ?? null,
-	  previewable: PREVIEWABLE_MIME_TYPES.has(raw.mimeType),
-    };
+    return this.toSummaryDto(raw);
   }
 
   async downloadStream(userId: string, id: string): Promise<DocumentDownloadStreamDto> {
@@ -502,13 +443,154 @@ export class DocumentsService {
   }
 
 
+  // filter, alle mit AND
+  private applyFilters(qb: SelectQueryBuilder<Document>, query: GetDocumentsQueryDto): void {
+    const { tagId, includeDescendants, type, createdFrom, createdTo } = query;
+
+    if (tagId) {
+      qb.andWhere((subQb) => {
+        const subQuery = subQb
+          .subQuery()
+          .select('1')
+          .from(DocumentTag, 'filterDocumentTag')
+          .innerJoin(Tag, 'filterTag', 'filterTag.id = filterDocumentTag.tagId')
+          .where('filterDocumentTag.documentId = document.id')
+          .andWhere(
+            includeDescendants
+              ? '(filterTag.id = :tagId OR filterTag.parentId = :tagId)'
+              : 'filterTag.id = :tagId',
+            { tagId },
+          )
+          .getQuery();
+        return `EXISTS ${subQuery}`;
+      });
+    }
+
+    if (type?.length) {
+      const mimeTypes = type.flatMap((category) => MIME_TYPES_BY_CATEGORY.get(category) ?? []);
+      qb.andWhere('document.mimeType IN (:...mimeTypes)', { mimeTypes });
+    }
+
+    if (createdFrom) {
+      qb.andWhere('document.createdAt >= :createdFrom', { createdFrom });
+    }
+
+    if (createdTo) {
+      qb.andWhere('document.createdAt < :createdTo', { createdTo });
+    }
+  }
+
+  // spalten nur aus fester liste, nie direkt vom user
+  private applySorting(
+    qb: SelectQueryBuilder<Document>,
+    query: GetDocumentsQueryDto,
+    searchParams: string[],
+  ): void {
+    const isSearching = searchParams.length > 0;
+    let sort = query.sort ?? (isSearching ? DocumentSortField.Relevance : DocumentSortField.Name);
+
+    // relevanz geht nur mit suchtext
+    if (sort === DocumentSortField.Relevance && !isSearching) {
+      sort = DocumentSortField.Name;
+    }
+
+    if (sort === DocumentSortField.Relevance) {
+      qb.addSelect(buildScoreExpression(searchParams), 'score')
+        .orderBy('score', 'DESC')
+        .addOrderBy('document.createdAt', 'DESC')
+        .addOrderBy('document.id', 'ASC');
+      return;
+    }
+
+    const column = SORT_COLUMNS[sort];
+    const order = query.order ?? column.defaultOrder;
+
+    qb.orderBy(column.expression, order === SortOrder.Asc ? 'ASC' : 'DESC')
+      .addOrderBy('document.id', 'ASC');
+  }
+
+  // eine zeile pro dokument
+  private createSummaryQuery(): SelectQueryBuilder<Document> {
+    return this.documentsRepository
+      .createQueryBuilder('document')
+      .innerJoin(User, 'uploader', 'uploader.id = document.uploadedBy')
+      .leftJoin(DocumentGroup, 'documentGroup', 'documentGroup.documentId = document.id')
+      .leftJoin(Group, 'group', 'group.id = documentGroup.groupId')
+      .leftJoin(DocumentTag, 'documentTag', 'documentTag.documentId = document.id')
+      .leftJoin(Tag, 'tag', 'tag.id = documentTag.tagId')
+      .leftJoin('ai_documents', 'aiDocument', '"aiDocument"."id" = document.id')
+      .select([
+        'document.id AS "id"',
+        'document.filename AS "filename"',
+        'document.mimeType AS "mimeType"',
+        'document.sizeBytes AS "sizeBytes"',
+        'document.createdAt AS "createdAt"',
+        'document.updatedAt AS "updatedAt"',
+        'uploader.id AS "uploaderId"',
+        'uploader.displayName AS "uploaderName"',
+        '"aiDocument"."status" AS "aiStatus"',
+        '"aiDocument"."ai_summary" AS "aiSummary"',
+        '"aiDocument"."language" AS "language"',
+        '"aiDocument"."error_key" AS "aiErrorKey"',
+      ])
+      .addSelect(
+        `COALESCE(
+          json_agg(DISTINCT jsonb_build_object('id', "group"."id", 'name', "group"."name"))
+            FILTER (WHERE "group"."id" IS NOT NULL),
+          '[]'
+        )`,
+        'groups',
+      )
+      .addSelect(
+        `COALESCE(
+          json_agg(DISTINCT jsonb_build_object('id', "tag"."id", 'name', "tag"."name", 'label', "tag"."label"))
+            FILTER (WHERE "tag"."id" IS NOT NULL),
+          '[]'
+        )`,
+        'tags',
+      )
+      .groupBy('document.id')
+      .addGroupBy('uploader.id')
+      .addGroupBy('"aiDocument"."id"');
+  }
+
+  private toSummaryDto(row: DocumentSummaryRow, searchTerms: string[] = []): DocumentSummaryDto {
+    const match = searchTerms.length > 0
+      ? buildMatch(row.matchChunk, row.aiSummary, searchTerms)
+      : undefined;
+
+    return {
+      id: row.id,
+      filename: row.filename,
+      mimeType: row.mimeType,
+      sizeBytes: Number(row.sizeBytes),
+      createdAt: row.createdAt,
+      updatedAt: row.updatedAt,
+      uploadedBy: { id: row.uploaderId, name: row.uploaderName },
+      groups: row.groups,
+      tags: row.tags,
+      aiStatus: row.aiStatus ?? DocumentAiStatus.NOT_STARTED,
+      aiSummary: row.aiSummary ?? undefined,
+      language: row.language ?? '',
+      aiErrorKey: row.aiErrorKey ?? null,
+      previewable: PREVIEWABLE_MIME_TYPES.has(row.mimeType),
+      ...(match ? { match } : {}),
+    };
+  }
+
+  // groupFilter schraenkt nur die lesbaren gruppen ein
   private async createReadableDocumentsQuery(
     userId: string,
+    groupFilter?: string[],
   ): Promise<SelectQueryBuilder<Document> | null> {
-    const readableGroupIds = await this.permissionsService.getGroupIdsWithPermission(
+    let readableGroupIds = await this.permissionsService.getGroupIdsWithPermission(
       userId,
       DocumentPermission.Read,
     );
+
+    if (groupFilter?.length) {
+      readableGroupIds = readableGroupIds.filter((groupId) => groupFilter.includes(groupId));
+    }
 
     if (readableGroupIds.length === 0) {
       return null;

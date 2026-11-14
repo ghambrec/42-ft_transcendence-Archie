@@ -29,6 +29,41 @@
 			"noDocs": "Keine Dokumente gefunden",
 			"errorLoading": "Dokumente konnten nicht geladen werden"
 		},
+		"search": {
+			"placeholder": "Dokumente durchsuchen …",
+			"type": "Typ",
+			"types": {
+				"pdf": "PDF",
+				"image": "Bild",
+				"text": "Text",
+				"word": "Word",
+				"excel": "Excel/CSV",
+				"archive": "Archiv"
+			},
+			"period": "Zeitraum",
+			"periods": {
+				"any": "Beliebig",
+				"today": "Heute",
+				"7d": "Letzte 7 Tage",
+				"30d": "Letzte 30 Tage",
+				"year": "Dieses Jahr",
+				"lastYear": "Letztes Jahr"
+			},
+			"from": "Von",
+			"to": "Bis",
+			"since": "ab {{ date }}",
+			"until": "bis {{ date }}",
+			"group": "Gruppe",
+			"reset": "Filter zurücksetzen",
+			"tagSuggestions": "Passende Tags:",
+			"source": {
+				"content": "Inhalt",
+				"summary": "Zusammenfassung"
+			},
+			"noResults": "Keine Dokumente für diese Filter gefunden",
+			"noResultsFor": "Keine Treffer für „{{ q }}“",
+			"searchEverywhere": "In allen Dokumenten suchen"
+		},
 		"upload": {
 			"upload": "Dokumente hochladen",
 			"selectGroupTooltip": "Gruppe für den Upload auswählen",

@@ -1,0 +1,135 @@
+@let types = filters.types();
+@let groupNames = selectedGroupNames();
+
+<div class="d-flex flex-wrap align-items-center gap-2">
+	<!-- suchfeld -->
+	<div class="search-field">
+		<i class="bi bi-search"></i>
+		<input
+			type="search"
+			class="form-control"
+			[placeholder]="'documents.search.placeholder' | transloco"
+			[attr.aria-label]="'documents.search.placeholder' | transloco"
+			[value]="draft()"
+			(input)="draft.set($event.target.value)"
+			(keydown.enter)="searchNow()"
+		/>
+	</div>
+
+	<!-- dateityp -->
+	<div ngbDropdown autoClose="outside">
+		<button type="button" class="filter-chip" [class.active]="types.length > 0" ngbDropdownToggle>
+			<i class="bi bi-file-earmark"></i>
+			@if (types.length === 0) {
+				{{ "documents.search.type" | transloco }}
+			} @else {
+				{{ "documents.search.types." + types[0] | transloco }}
+				@if (types.length > 1) {
+					+{{ types.length - 1 }}
+				}
+			}
+		</button>
+		<div ngbDropdownMenu>
+			@for (type of fileTypes; track type) {
+				<button type="button" ngbDropdownItem class="filter-option" (click)="filters.toggleType(type)">
+					<i class="bi bi-check-lg" [class.invisible]="!types.includes(type)"></i>
+					{{ "documents.search.types." + type | transloco }}
+				</button>
+			}
+		</div>
+	</div>
+
+	<!-- zeitraum -->
+	<div ngbDropdown autoClose="outside" #periodDropdown="ngbDropdown">
+		<button type="button" class="filter-chip" [class.active]="filters.hasDateFilter()" ngbDropdownToggle>
+			<i class="bi bi-calendar3"></i>
+			@if (filters.period(); as period) {
+				{{ "documents.search.periods." + period | transloco }}
+			} @else if (filters.from() && filters.to()) {
+				{{ filters.from() | date: 'dd.MM.yyyy' }} – {{ filters.to() | date: 'dd.MM.yyyy' }}
+			} @else if (filters.from()) {
+				{{ "documents.search.since" | transloco: { date: (filters.from() | date: 'dd.MM.yyyy') } }}
+			} @else if (filters.to()) {
+				{{ "documents.search.until" | transloco: { date: (filters.to() | date: 'dd.MM.yyyy') } }}
+			} @else {
+				{{ "documents.search.period" | transloco }}
+			}
+		</button>
+		<div ngbDropdownMenu>
+			<button type="button" ngbDropdownItem class="filter-option"
+				(click)="filters.setPeriod(null); periodDropdown.close()">
+				<i class="bi bi-check-lg" [class.invisible]="filters.hasDateFilter()"></i>
+				{{ "documents.search.periods.any" | transloco }}
+			</button>
+			@for (period of periods; track period) {
+				<button type="button" ngbDropdownItem class="filter-option"
+					(click)="filters.setPeriod(period); periodDropdown.close()">
+					<i class="bi bi-check-lg" [class.invisible]="filters.period() !== period"></i>
+					{{ "documents.search.periods." + period | transloco }}
+				</button>
+			}
+
+			<div class="dropdown-divider"></div>
+
+			<!-- eigener zeitraum -->
+			<div class="date-range">
+				<label>
+					<span>{{ "documents.search.from" | transloco }}</span>
+					<input type="date" class="form-control form-control-sm"
+						[value]="filters.from() ?? ''" [max]="filters.to() ?? ''"
+						(change)="filters.setRange($event.target.value, filters.to())" />
+				</label>
+				<label>
+					<span>{{ "documents.search.to" | transloco }}</span>
+					<input type="date" class="form-control form-control-sm"
+						[value]="filters.to() ?? ''" [min]="filters.from() ?? ''"
+						(change)="filters.setRange(filters.from(), $event.target.value)" />
+				</label>
+			</div>
+		</div>
+	</div>
+
+	<!-- gruppe -->
+	@if (showGroupFilter()) {
+		<div ngbDropdown autoClose="outside">
+			<button type="button" class="filter-chip" [class.active]="filters.groupIds().length > 0" ngbDropdownToggle>
+				<i class="bi bi-people"></i>
+				@if (groupNames.length === 0) {
+					{{ "documents.search.group" | transloco }}
+				} @else {
+					{{ groupNames[0] }}
+					@if (groupNames.length > 1) {
+						+{{ groupNames.length - 1 }}
+					}
+				}
+			</button>
+			<div ngbDropdownMenu>
+				@for (group of groupList(); track group.id) {
+					<button type="button" ngbDropdownItem class="filter-option" (click)="filters.toggleGroup(group.id)">
+						<i class="bi bi-check-lg" [class.invisible]="!filters.groupIds().includes(group.id)"></i>
+						{{ group.name }}
+					</button>
+				}
+			</div>
+		</div>
+	}
+
+	@if (filters.hasFilters()) {
+		<button type="button" class="btn btn-link btn-sm text-decoration-none" (click)="filters.reset()">
+			{{ "documents.search.reset" | transloco }}
+		</button>
+	}
+</div>
+
+<!-- passende tags zum suchtext -->
+@if (tagSuggestions().length > 0) {
+	<div class="d-flex flex-wrap align-items-center gap-2 mt-2 small">
+		<span class="text-secondary">{{ "documents.search.tagSuggestions" | transloco }}</span>
+		@for (tag of tagSuggestions(); track tag.id) {
+			<a class="tag-suggestion" routerLink="/documents" [queryParams]="{ tag: tag.id }">
+				<i class="bi bi-tag"></i>
+				{{ tag.label }}
+			</a>
+		}
+	</div>
+}

@@ -29,6 +29,41 @@
 			"noDocs": "No se encontraron documentos",
 			"errorLoading": "No se pudieron cargar los documentos"
 		},
+		"search": {
+			"placeholder": "Buscar documentos …",
+			"type": "Tipo",
+			"types": {
+				"pdf": "PDF",
+				"image": "Imagen",
+				"text": "Texto",
+				"word": "Word",
+				"excel": "Excel/CSV",
+				"archive": "Archivo comprimido"
+			},
+			"period": "Fecha",
+			"periods": {
+				"any": "Cualquier fecha",
+				"today": "Hoy",
+				"7d": "Últimos 7 días",
+				"30d": "Últimos 30 días",
+				"year": "Este año",
+				"lastYear": "El año pasado"
+			},
+			"from": "Desde",
+			"to": "Hasta",
+			"since": "desde {{ date }}",
+			"until": "hasta {{ date }}",
+			"group": "Grupo",
+			"reset": "Restablecer filtros",
+			"tagSuggestions": "Etiquetas coincidentes:",
+			"source": {
+				"content": "Contenido",
+				"summary": "Resumen"
+			},
+			"noResults": "No se encontraron documentos con estos filtros",
+			"noResultsFor": "Sin resultados para «{{ q }}»",
+			"searchEverywhere": "Buscar en todos los documentos"
+		},
 		"upload": {
 			"upload": "Subir documentos",
 			"selectGroupTooltip": "Seleccionar el grupo para la subida",
