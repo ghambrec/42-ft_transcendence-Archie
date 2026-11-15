@@ -1,5 +1,15 @@
 {
 	"programName": "Archie",
+	"pageTitle": {
+		"login": "Iniciar sesión",
+		"signup": "Registrarse",
+		"privacy": "Política de privacidad",
+		"terms": "Términos del servicio",
+		"documents": "Documentos",
+		"aiChat": "Chat de IA",
+		"profile": "Perfil",
+		"settings": "Configuración"
+	},
 	"sidebar": {
 		"toggle": "Mostrar/ocultar navegación",
 		"settings": "Configuración",
