@@ -6,12 +6,13 @@ import { TranslocoPipe } from '@jsverse/transloco';
 import { firstValueFrom } from 'rxjs';
 import { Auth } from '../auth';
 import { TextFormField } from '../../shared/form-field/form-field';
+import { LanguageSwitcher } from '../../shared/language-switcher/language-switcher';
 import { DISPLAY_NAME_MAX_LENGTH } from '../../validation/display-name-policy';
 import { PASSWORD_POLICY } from '../../validation/password-policy';
 
 @Component({
 	selector: 'app-signup',
-	imports: [TranslocoPipe, FormRoot, TextFormField, RouterLink],
+	imports: [TranslocoPipe, FormRoot, TextFormField, RouterLink, LanguageSwitcher],
 	templateUrl: './signup.html',
 })
 export class Signup {

@@ -1,0 +1,9 @@
+<div class="btn-group btn-group-sm" role="group">
+	@for (lang of languages; track lang) {
+		<button type="button" class="btn btn-outline-secondary text-uppercase"
+			[class.active]="lang === activeLang()" [attr.aria-pressed]="lang === activeLang()"
+			[attr.lang]="lang" (click)="setLanguage(lang)">
+			{{ lang }}
+		</button>
+	}
+</div>

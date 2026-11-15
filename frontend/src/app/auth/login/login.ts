@@ -7,10 +7,11 @@ import { Router, RouterLink } from '@angular/router';
 import { Users } from '../../users/users';
 import { NgbModal } from '@ng-bootstrap/ng-bootstrap';
 import { SetPassword } from '../set-password/set-password';
+import { LanguageSwitcher } from '../../shared/language-switcher/language-switcher';
 
 @Component({
 	selector: 'app-login',
-	imports: [TranslocoPipe, FormRoot, FormField, RouterLink],
+	imports: [TranslocoPipe, FormRoot, FormField, RouterLink, LanguageSwitcher],
 	templateUrl: './login.html',
 	styleUrl: './login.scss',
 })
