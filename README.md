@@ -253,7 +253,21 @@ erDiagram
 | Multiple languages | Minor | 1 | English, German, Spanish with Transloco | ghambrec, poverbec |
 | **Total** | | **18** | | |
 
-We chose these modules because they describe what a document archive for several people needs: accounts, groups with separated access, reliable file handling and a way to find things again. The AI modules are the core idea of the project; the monitoring module came from the need to see how long ingestion and chat requests take on local models.
+### Justification per module
+
+We chose these modules because they describe what a document archive for several people needs: accounts, groups with separated access, reliable file handling and a way to find things again. The AI modules are the core idea of the project.
+
+- **Framework for frontend and backend (Major):** The application has many forms, guarded routes and permission-dependent views. Angular provides routing, typed forms and an HTTP client out of the box, and NestJS provides modules, guards and validation pipes that map directly to our permission checks.
+- **Standard user management and authentication (Major):** Every document belongs to a user, so secure sign-up, login, sessions, profile and avatar are the base of everything else. Server-side sessions in Redis can be revoked, which a stateless token cannot do as easily.
+- **Advanced permissions system (Major):** Households and clubs do not want every member to see or change everything. Fine-grained keys (`documents.read`, `upload`, `update`, `delete`) per user and group let an administrator decide exactly who may do what, and the same check protects the AI retrieval.
+- **Organization system (Major):** Groups are how the target users think (family, club, department). Scoping documents, permissions and search to groups gives separated archives inside one installation.
+- **RAG system (Major):** Finding a document is only half of the problem; users want to ask what is in it. Chunking, pgvector embeddings and retrieval limited to readable documents give answers with sources and without leaking other groups' data.
+- **LLM system interface (Major):** The same model interface produces the structured summaries and tag suggestions during ingestion and the chat answers. A switchable provider keeps documents local with Ollama by default and allows an external provider on purpose.
+- **Monitoring with Prometheus and Grafana (Major):** Ingestion and chat run on local models and can be slow. Metrics for both backends and all containers show where time and resources go instead of guessing.
+- **ORM (Minor):** TypeORM entities and migrations keep the schema reproducible for the whole team and for the CI test database.
+- **File upload and management (Minor):** Uploads are the entry point of the product and the main attack surface. Type, content and size validation, MinIO storage, preview and progress make uploads safe and usable.
+- **Advanced search (Minor):** An archive is only useful if documents can be found again. Ranked search over metadata and extracted text, with filters, sorting and pagination, covers the cases that plain tag browsing does not.
+- **Multiple languages (Minor):** Our users and OCR documents are German, English and Spanish, so the interface and the analysis language support need to match.
 
 ## Individual Contributions
 
@@ -261,6 +275,25 @@ We chose these modules because they describe what a document archive for several
 - **nluchini:** NestJS project setup, authentication and session handling, documents module with validation and MinIO storage, tags and permissions backend, TypeORM migrations, GitHub Actions and the end-to-end test environment.
 - **poverbec:** user management backend and frontend, profile page, retrieval and conversation logic in the AI service, chat interface, Prometheus and Grafana monitoring.
 - **cbauer:** groups and group membership in backend and frontend, permission editor, login and profile views.
+
+### Challenges and solutions
+
+- **ghambrec:**
+  - Large PDFs blocked the ingestion pipeline. Text extraction now runs asynchronously, and jobs that time out fail with their own error instead of hanging.
+  - The login page caused a 401 on `/users/me`. A separate `/auth/session` endpoint returns either the current user or `null`.
+  - After logout, data of the previous user could remain in the browser's memory. The app now reloads completely on logout.
+  - Searching many documents needed to stay fast. The search uses trigram and GIN indexes.
+- **nluchini:**
+  - The end-to-end tests were unstable in GitHub Actions. The MinIO service container and the test environment had to be reworked several times until the pipeline ran reliably.
+  - Filtering documents by tag and group needed several iterations of the `findAll` query before it worked together with permissions.
+- **poverbec:**
+  - Retrieval had to respect permissions. The SQL query of the AI service was reworked so that only chunks of readable documents are found.
+  - OCR and PDF extraction needed cleanup and better error handling until scans and photos were extracted reliably.
+  - TypeORM migrations for the system tags needed a correct `down` step that deletes child tags before parent tags.
+- **cbauer:**
+  - The login flow handled a login after another user's session incorrectly. It was fixed so that administrators are recognized correctly.
+  - Saving a profile got stuck and permissions were not reloaded after saving. Both were fixed.
+  - Unit tests broke after the return value of the current-user endpoint changed and were updated.
 
 ## Resources
 
