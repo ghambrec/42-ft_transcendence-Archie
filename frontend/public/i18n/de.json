@@ -234,6 +234,8 @@
 		}
 	},
 	"login": {
+		"signupHint": "Noch kein Konto?",
+		"signupLink": "Jetzt registrieren",
 		"email": "E-Mail",
 		"password": "Passwort",
 		"submit": "Anmelden",
@@ -534,6 +536,12 @@
 			"timeout": "Die Analyse hat zu lange gedauert und wurde abgebrochen",
 			"unknown": "Bei der Analyse ist ein unbekannter Fehler aufgetreten"
 		}
+	},
+	"signup": {
+		"submit": "Konto erstellen",
+		"errorGeneral": "Registrierung fehlgeschlagen. Bitte versuchen Sie es erneut.",
+		"loginHint": "Schon ein Konto?",
+		"loginLink": "Anmelden"
 	},
 	"legal": {
 		"back": "Zurück",

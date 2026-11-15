@@ -234,6 +234,8 @@
 	  }
 	},
 	"login": {
+		"signupHint": "No account yet?",
+		"signupLink": "Sign up",
 		"email": "E-Mail",
 		"password": "Password",
 		"submit": "Log in",
@@ -536,6 +538,12 @@
 			"timeout": "Analysis took too long and was cancelled",
 			"unknown": "An unknown error occurred during analysis"
 		}
+	},
+	"signup": {
+		"submit": "Create account",
+		"errorGeneral": "Sign-up failed. Please try again.",
+		"loginHint": "Already have an account?",
+		"loginLink": "Log in"
 	},
 	"legal": {
 		"back": "Back",

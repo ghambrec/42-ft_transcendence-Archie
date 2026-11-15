@@ -14,6 +14,13 @@ export const routes: Routes = [
 		canActivate: [guestGuard],
 		title: 'Login',
 	},
+	{
+		path: 'signup',
+		loadComponent: () =>
+			import('./auth/signup/signup').then((m) => m.Signup),
+		canActivate: [guestGuard],
+		title: 'Sign up',
+	},
 	// legal pages, reachable without login
 	{
 		path: 'privacy',

@@ -1,0 +1,37 @@
+<div class="d-flex flex-column align-items-center justify-content-center vh-100 bg-light">
+	<form [formRoot]="signupForm" class="card p-4" style="width: 320px;">
+
+			<!-- logo -->
+			<img src="images/logo.png" alt="" height="80" class="d-block mx-auto mb-3">
+
+			<app-form-field inputId="signup-email" type="email" autocomplete="email"
+				labelKey="users.createUser.email" [field]="signupForm.email" />
+			<app-form-field inputId="signup-displayName" autocomplete="nickname"
+				labelKey="users.createUser.name" [field]="signupForm.displayName" />
+			<app-form-field inputId="signup-password" type="password" autocomplete="new-password"
+				labelKey="users.createUser.password" [field]="signupForm.password" />
+
+			<!-- submit button -->
+			<button type="submit" class="btn btn-primary w-100" [disabled]="signupForm().submitting()">
+				{{ 'signup.submit' | transloco }}
+			</button>
+
+			<!-- error message -->
+			@if (signupForm().errors()[0]?.message; as errorKey) {
+				<p class="text-danger small mt-2 mb-0">{{ errorKey | transloco }}</p>
+			}
+
+			<!-- back to login -->
+			<p class="small text-center mt-3 mb-0">
+				{{ 'signup.loginHint' | transloco }}
+				<a routerLink="/login">{{ 'signup.loginLink' | transloco }}</a>
+			</p>
+	</form>
+
+	<!-- legal links -->
+	<div class="small text-secondary mt-3">
+		<a routerLink="/privacy" class="link-secondary text-decoration-none">{{ 'legal.privacy' | transloco }}</a>
+		<span class="mx-2">·</span>
+		<a routerLink="/terms" class="link-secondary text-decoration-none">{{ 'legal.terms' | transloco }}</a>
+	</div>
+</div>

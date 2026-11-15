@@ -11,6 +11,12 @@ export interface LoginRequest {
 	password: string;
 }
 
+export interface RegisterRequest {
+	email: string;
+	displayName: string;
+	password: string;
+}
+
 export interface LoginResponse {
 	id: string;
 	email: string;
@@ -32,6 +38,12 @@ export class Auth {
 		const url = `${this.baseUrl}/login`;
 
 		return this.http.post<LoginResponse>(url, body, { withCredentials: true });
+	}
+
+	register(body: RegisterRequest) {
+		const url = `${this.baseUrl}/register`;
+
+		return this.http.post<void>(url, body, { withCredentials: true });
 	}
 
 	logout() {

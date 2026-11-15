@@ -234,6 +234,8 @@
 		}
 	},
 	"login": {
+		"signupHint": "¿Aún no tienes cuenta?",
+		"signupLink": "Regístrate",
 		"email": "Correo electrónico",
 		"password": "Contraseña",
 		"submit": "Iniciar sesión",
@@ -534,6 +536,12 @@
 			"timeout": "El análisis tardó demasiado y se canceló",
 			"unknown": "Se produjo un error desconocido durante el análisis"
 		}
+	},
+	"signup": {
+		"submit": "Crear cuenta",
+		"errorGeneral": "No se pudo completar el registro. Inténtalo de nuevo.",
+		"loginHint": "¿Ya tienes una cuenta?",
+		"loginLink": "Iniciar sesión"
 	},
 	"legal": {
 		"back": "Volver",

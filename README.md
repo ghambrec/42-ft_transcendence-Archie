@@ -10,7 +10,7 @@ Users upload documents into groups. Every upload is analysed in the background: 
 
 ### Key features
 
-- **Accounts and sessions:** login with server-side sessions in Redis, forced password change on first login, login attempt lockout, profile with avatar and language.
+- **Accounts and sessions:** sign-up and login with server-side sessions in Redis, forced password change on first login, login attempt lockout, profile with avatar and language.
 - **Groups as organizations:** administrators create groups, add and remove members, and grant permissions per user and group.
 - **Permissions:** `documents.read`, `documents.upload`, `documents.update` and `documents.delete` are checked per group on every document route and in the AI retrieval. Administration views are only available to admins.
 - **Document management:** validated upload (file type, real content type, size limit), listing, preview, download, rename, move to another group, delete.
