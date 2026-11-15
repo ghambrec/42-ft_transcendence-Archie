@@ -515,7 +515,7 @@
 		"DOCUMENT_NOT_FOUND": "Das Dokument wurde nicht gefunden.",
 		"DOCUMENT_FILENAME_INVALID": "Der Dateiname ist ungültig.",
 		"DOCUMENT_STILL_PROCESSING": "Das Dokument wird noch analysiert.",
-		"DOCUMENT_INGESTION_NOT_RETRYABLE": "Die Analyse kann nur erneut gestartet werden, wenn sie fehlgeschlagen ist oder noch nicht gestartet wurde.",
+		"DOCUMENT_INGESTION_NOT_RETRYABLE": "Die Analyse kann nicht erneut gestartet werden, solange sie läuft oder übersprungen wurde.",
 		"AI_SERVICE_UNAVAILABLE": "Der KI-Dienst ist derzeit nicht verfügbar. Bitte versuchen Sie es später erneut.",
 		"TAG_NOT_FOUND": "Der Tag wurde nicht gefunden.",
 		"FORBIDDEN": "Sie haben keine Berechtigung für diese Aktion."

@@ -517,7 +517,7 @@
 		"DOCUMENT_NOT_FOUND": "Document was not found.",
 		"DOCUMENT_FILENAME_INVALID": "The filename is invalid.",
 		"DOCUMENT_STILL_PROCESSING": "The document is still being analyzed.",
-		"DOCUMENT_INGESTION_NOT_RETRYABLE": "The analysis can only be restarted if it failed or was never started.",
+		"DOCUMENT_INGESTION_NOT_RETRYABLE": "The analysis cannot be restarted while it is running or was skipped.",
 		"AI_SERVICE_UNAVAILABLE": "The AI service is currently unavailable. Please try again later.",
 		"TAG_NOT_FOUND": "Tag was not found.",
 		"FORBIDDEN": "You don't have permission for this action."

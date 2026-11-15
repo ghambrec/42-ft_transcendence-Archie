@@ -515,7 +515,7 @@
 		"DOCUMENT_NOT_FOUND": "No se encontró el documento.",
 		"DOCUMENT_FILENAME_INVALID": "El nombre del archivo no es válido.",
 		"DOCUMENT_STILL_PROCESSING": "El documento todavía se está analizando.",
-		"DOCUMENT_INGESTION_NOT_RETRYABLE": "El análisis solo se puede reiniciar si falló o nunca se inició.",
+		"DOCUMENT_INGESTION_NOT_RETRYABLE": "El análisis no se puede reiniciar mientras está en curso o si fue omitido.",
 		"AI_SERVICE_UNAVAILABLE": "El servicio de IA no está disponible en este momento. Inténtelo de nuevo más tarde.",
 		"TAG_NOT_FOUND": "No se encontró la etiqueta.",
 		"FORBIDDEN": "No tiene permiso para realizar esta acción."
