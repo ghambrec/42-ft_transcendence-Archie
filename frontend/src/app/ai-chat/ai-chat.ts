@@ -39,6 +39,7 @@ export class AIChat {
   readonly isSending = signal(false);
   readonly sendError = signal<string | null>(null);
   readonly pendingQuestion = signal<string | null>(null);
+  readonly streamedAnswer = signal<string | null>(null);
   readonly isDeleting = signal(false);
   readonly messageResource = this.conversationService.messageResource(this.activeConversationId);
   readonly messages = computed(() => {
@@ -47,7 +48,11 @@ export class AIChat {
     if (question === null) return loaded;
     // show the question right away, until the real messages are loaded
     const pending: ChatMessage = { id: 'pending', conv_id: '', sender: 'user', content: question, created_at: '' };
-    return [...loaded, pending];
+    const answer = this.streamedAnswer();
+    if (!answer) return [...loaded, pending];
+    // the answer so far, while it is still streaming
+    const streaming: ChatMessage = { id: 'streaming', conv_id: '', sender: 'llm', content: answer, created_at: '' };
+    return [...loaded, pending, streaming];
   });
   readonly isOpeningConversation = this.messageResource.isLoading;
   readonly openConversationError = computed(() =>
@@ -68,11 +73,15 @@ export class AIChat {
       this.draftConversationId = null;
       this.draft.set('');
       this.pendingQuestion.set(null);
+      this.streamedAnswer.set(null);
       this.sendError.set(null);
       this.createConversationError.set(null);
     });
     effect(() => {
-      if (!this.isSending() && !this.isOpeningConversation()) this.pendingQuestion.set(null);
+      if (!this.isSending() && !this.isOpeningConversation()) {
+        this.pendingQuestion.set(null);
+        this.streamedAnswer.set(null);
+      }
     });
   }
 
@@ -105,7 +114,9 @@ export class AIChat {
         this.draftConversationId = conversation.id;
       }
       if (this.destroyRef.destroyed || this.activeRequest !== cancelled) return;
-      await firstValueFrom(this.conversationService.ask(conversationId, question).pipe(takeUntil(cancelled)));
+      await firstValueFrom(this.conversationService.ask(
+        conversationId, question, text => this.streamedAnswer.set(text),
+      ).pipe(takeUntil(cancelled)));
       if (this.destroyRef.destroyed || this.activeConversationId() !== selectedId) return;
       if (selectedId) {
         this.messageResource.reload();

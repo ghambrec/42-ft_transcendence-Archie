@@ -22,7 +22,7 @@ export class ConversationsService {
 		return { 'X-API-KEY': this.config.apiKey, 'X-User-Id': userId };
 	}
 
-  private async request(userId: string, path: string, init: RequestInit = {}, signal?: AbortSignal) {
+  private async request(userId: string, path: string, init: RequestInit = {}, signal?: AbortSignal, stream = false) {
     if (signal?.aborted) throw new ApplicationException(ErrorCode.AiRequestCancelled);
     const deadline = new AbortController();
     const timer = setTimeout(() => deadline.abort(), this.config.chatTimeoutMs);
@@ -34,6 +34,8 @@ export class ConversationsService {
         signal: requestSignal,
       });
       if (!response.ok) throw await mapAiServiceError(response);
+      // streamed answers are passed on as they are, the controller reads the body
+      if (stream) return response;
       const text = await response.text();
       try { return JSON.parse(text); }
       catch { throw new ApplicationException(ErrorCode.AiInvalidResponse); }
@@ -59,7 +61,7 @@ export class ConversationsService {
   ask(userId: string, conversationId: string, question: string, signal?: AbortSignal) {
     return this.request(userId, `/${conversationId}/ask`, {
       method: 'POST', body: JSON.stringify({ question }),
-    }, signal);
+    }, signal, true);
   }
 
   getMessages(userId: string, conversationId: string) {

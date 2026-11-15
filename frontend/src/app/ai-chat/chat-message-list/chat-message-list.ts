@@ -25,7 +25,9 @@ export class ChatMessageList {
     afterRenderEffect(() => {
       const viewport = this.messageViewport()?.nativeElement;
       const conversationId = this.conversationId();
-      const latestMessageId = this.messages().at(-1)?.id;
+      const latestMessage = this.messages().at(-1);
+      // the length is part of the key, so a streaming answer keeps scrolling
+      const latestMessageId = latestMessage && `${latestMessage.id}:${latestMessage.content.length}`;
       if (conversationId !== this.lastScrollConversationId) {
         this.lastScrollConversationId = conversationId;
         this.lastRenderedMessageId = undefined;
