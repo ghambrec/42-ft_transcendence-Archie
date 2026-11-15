@@ -3,6 +3,7 @@
 }
 
 .name-cell {
+	min-width: 12rem; // damit der name beim horizontalen scrollen lesbar bleibt
 	max-width: 22rem;
 }
 

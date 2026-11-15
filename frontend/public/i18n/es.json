@@ -1,6 +1,7 @@
 {
 	"programName": "Archie",
 	"sidebar": {
+		"toggle": "Mostrar/ocultar navegación",
 		"settings": "Configuración",
 		"documents": "Documentos",
 		"dropdown": {
