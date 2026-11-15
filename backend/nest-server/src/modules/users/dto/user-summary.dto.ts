@@ -22,6 +22,9 @@ export class UserSummaryDto {
 
     @ApiProperty()
     hasToChangePassword!: boolean;
+
+    @ApiProperty()
+    twoFactorEnabled!: boolean;
     //@ApiProperty()
     //lastLoginAt!: string;
 }

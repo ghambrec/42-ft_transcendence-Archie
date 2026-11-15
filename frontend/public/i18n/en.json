@@ -256,6 +256,17 @@
 			"emailRequired": "Email is required.",
 			"emailFormat": "Please enter a valid email address.",
 			"passwordRequired": "Password is required."
+		},
+		"twoFactor": {
+			"code": "Code",
+			"hint": "Enter the 6-digit code from your authenticator app.",
+			"submit": "Confirm",
+			"back": "Back to log in",
+			"errorInvalidCode": "The code is invalid or expired",
+			"errors": {
+				"codeRequired": "Code is required.",
+				"codeFormat": "The code has 6 digits."
+			}
 		}
 	},
 	"auth": {
@@ -520,6 +531,20 @@
 			"required": "Enter a new password.",
 			"maxLength": "Password must be at most 25 characters long.",
 			"pattern": "Include an uppercase letter, a lowercase letter, a number, and at least one of !@#$%^&*."
+		},
+		"twoFactor": {
+			"heading": "Two-factor authentication",
+			"description": "Protect your account with an additional code from an authenticator app.",
+			"enable": "Enable 2FA",
+			"scanHint": "Scan the QR code with your authenticator app and enter the code it shows.",
+			"code": "Code",
+			"confirm": "Confirm",
+			"active": "Two-factor authentication is active.",
+			"disable": "Disable 2FA",
+			"error": "Two-factor authentication could not be changed.",
+			"invalidCode": "The code is invalid.",
+			"codeRequired": "Enter the code.",
+			"codeFormat": "The code has 6 digits."
 		}
 	},
 	"errors": {

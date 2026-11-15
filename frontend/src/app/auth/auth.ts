@@ -23,6 +23,14 @@ export interface LoginResponse {
 	displayName: string;
 	preferredLanguage: SupportedLanguage;
 	hasToChangePassword: boolean;
+	// nur gesetzt wenn der 2fa code noch fehlt
+	twoFactorRequired?: boolean;
+	challengeToken?: string;
+}
+
+export interface TwoFactorVerifyRequest {
+	challengeToken: string;
+	code: string;
 }
 
 
@@ -62,6 +70,30 @@ export class Auth {
 			this.usersService.currentUser.set(null);
 			return false;
 		}
+	}
+
+	verifyTwoFactor(body: TwoFactorVerifyRequest) {
+		const url = `${this.baseUrl}/2fa/verify`;
+
+		return this.http.post<LoginResponse>(url, body, { withCredentials: true });
+	}
+
+	setupTwoFactor() {
+		const url = `${this.baseUrl}/2fa/setup`;
+
+		return this.http.post<{ qrCodeDataUrl: string }>(url, {}, { withCredentials: true });
+	}
+
+	enableTwoFactor(code: string) {
+		const url = `${this.baseUrl}/2fa/enable`;
+
+		return this.http.post<void>(url, { code }, { withCredentials: true });
+	}
+
+	disableTwoFactor() {
+		const url = `${this.baseUrl}/2fa/disable`;
+
+		return this.http.post<void>(url, {}, { withCredentials: true });
 	}
 
 	setPassword(body: { password: string }) {

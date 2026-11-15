@@ -256,6 +256,17 @@
 			"emailRequired": "El correo electrónico es obligatorio.",
 			"emailFormat": "Introduzca una dirección de correo electrónico válida.",
 			"passwordRequired": "La contraseña es obligatoria."
+		},
+		"twoFactor": {
+			"code": "Código",
+			"hint": "Introduzca el código de 6 dígitos de su aplicación de autenticación.",
+			"submit": "Confirmar",
+			"back": "Volver al inicio de sesión",
+			"errorInvalidCode": "El código no es válido o ha caducado",
+			"errors": {
+				"codeRequired": "El código es obligatorio.",
+				"codeFormat": "El código tiene 6 dígitos."
+			}
 		}
 	},
 	"auth": {
@@ -518,6 +529,20 @@
 			"required": "Introduzca una nueva contraseña.",
 			"maxLength": "La contraseña debe tener como máximo 25 caracteres.",
 			"pattern": "Incluya una letra mayúscula, una letra minúscula, un número y al menos uno de los caracteres !@#$%^&*."
+		},
+		"twoFactor": {
+			"heading": "Autenticación de dos factores",
+			"description": "Proteja su cuenta con un código adicional de una aplicación de autenticación.",
+			"enable": "Activar 2FA",
+			"scanHint": "Escanee el código QR con su aplicación de autenticación e introduzca el código que se muestra.",
+			"code": "Código",
+			"confirm": "Confirmar",
+			"active": "La autenticación de dos factores está activa.",
+			"disable": "Desactivar 2FA",
+			"error": "No se pudo cambiar la autenticación de dos factores.",
+			"invalidCode": "El código no es válido.",
+			"codeRequired": "Introduzca el código.",
+			"codeFormat": "El código tiene 6 dígitos."
 		}
 	},
 	"errors": {

@@ -256,6 +256,17 @@
 			"emailRequired": "E-Mail ist erforderlich.",
 			"emailFormat": "Bitte geben Sie eine gültige E-Mail-Adresse ein.",
 			"passwordRequired": "Passwort ist erforderlich."
+		},
+		"twoFactor": {
+			"code": "Code",
+			"hint": "Geben Sie den 6-stelligen Code aus Ihrer Authenticator-App ein.",
+			"submit": "Bestätigen",
+			"back": "Zurück zur Anmeldung",
+			"errorInvalidCode": "Der Code ist ungültig oder abgelaufen",
+			"errors": {
+				"codeRequired": "Code ist erforderlich.",
+				"codeFormat": "Der Code besteht aus 6 Ziffern."
+			}
 		}
 	},
 	"auth": {
@@ -518,6 +529,20 @@
 			"required": "Geben Sie ein neues Passwort ein.",
 			"maxLength": "Das Passwort darf höchstens 25 Zeichen lang sein.",
 			"pattern": "Verwenden Sie einen Großbuchstaben, einen Kleinbuchstaben, eine Zahl und mindestens ein Zeichen aus !@#$%^&*."
+		},
+		"twoFactor": {
+			"heading": "Zwei-Faktor-Authentifizierung",
+			"description": "Schützen Sie Ihr Konto zusätzlich mit einem Code aus einer Authenticator-App.",
+			"enable": "2FA aktivieren",
+			"scanHint": "Scannen Sie den QR-Code mit Ihrer Authenticator-App und geben Sie den angezeigten Code ein.",
+			"code": "Code",
+			"confirm": "Bestätigen",
+			"active": "Die Zwei-Faktor-Authentifizierung ist aktiv.",
+			"disable": "2FA deaktivieren",
+			"error": "Die Zwei-Faktor-Authentifizierung konnte nicht geändert werden.",
+			"invalidCode": "Der Code ist ungültig.",
+			"codeRequired": "Geben Sie den Code ein.",
+			"codeFormat": "Der Code besteht aus 6 Ziffern."
 		}
 	},
 	"errors": {
