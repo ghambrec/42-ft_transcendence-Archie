@@ -10,7 +10,7 @@ Users upload documents into groups. Every upload is analysed in the background: 
 
 ### Key features
 
-- **Accounts and sessions:** sign-up and login with server-side sessions in Redis, forced password change on first login, login attempt lockout, profile with avatar and language.
+- **Accounts and sessions:** sign-up and login with server-side sessions in Redis, forced password change on first login, login attempt lockout, optional two-factor authentication with an authenticator app, profile with avatar and language.
 - **Groups as organizations:** administrators create groups, add and remove members, and grant permissions per user and group.
 - **Permissions:** `documents.read`, `documents.upload`, `documents.update` and `documents.delete` are checked per group on every document route and in the AI retrieval. Administration views are only available to admins.
 - **Document management:** validated upload (file type, real content type, size limit), listing, preview, download, rename, move to another group, delete.
@@ -44,6 +44,7 @@ cp -n env/.env.example env/.env
 Edit `env/.env` before the first start:
 
 - Set the database credentials, the seeded administrator account (`ADMIN_USER`, `ADMIN_USER_PASSWORD`), the MinIO credentials, the Grafana admin password and a strong `AI_SERVICE_API_KEY`.
+- Set `TOTP_ENCRYPTION_KEY` to your own value, generated with `openssl rand -base64 32`. It encrypts the two-factor secrets in the database; if it changes, users have to set up two-factor authentication again.
 - `LLM_PROVIDER=ollama` keeps generation local. `openrouter` requires a valid `OPENROUTER_API_KEY` and sends analysis content to the external provider. Embeddings always use Ollama.
 - Leave `LANGFUSE_ENABLED=false` unless a separately configured Langfuse instance is available.
 
@@ -159,6 +160,8 @@ Caddy is the only entry point. The browser talks HTTPS to Caddy; connections beh
 
 Frontend and API share one origin, so CORS is not enabled. The session cookie is `HttpOnly`, `Secure` and `SameSite=Lax`. Passwords are stored as bcrypt hashes.
 
+Two-factor authentication uses time-based one-time passwords (TOTP, RFC 6238). The user scans a QR code in the profile and confirms the setup with a first code. The secret is stored encrypted with AES-256-GCM, the key comes from the environment. At login, a correct password only creates a short-lived challenge in Redis; the session is created after the 6-digit code was verified. Wrong codes count towards the login lockout.
+
 ### Document processing
 
 1. An authenticated user with the upload permission sends a file to NestJS. The file type is checked against an allow list by extension and by detected content, the size against `DOCUMENT_MAX_UPLOAD_SIZE_MB`.
@@ -171,7 +174,7 @@ For a chat question, the AI service embeds the question, searches the chunks of 
 
 ## Database Schema
 
-NestJS owns the application tables through TypeORM migrations. The AI service creates the `ai_*` tables with its own SQL. Sessions and the job queue live in Redis and are not part of the schema.
+NestJS owns the application tables through TypeORM migrations. The AI service creates the `ai_*` tables with its own SQL. Sessions, pending two-factor logins and the job queue live in Redis and are not part of the schema.
 
 ```mermaid
 erDiagram
@@ -198,7 +201,7 @@ erDiagram
 
 | Table | Key fields | Purpose |
 | --- | --- | --- |
-| `users` | `id` uuid, `email` varchar unique, `password_hash` varchar, `display_name` varchar, `avatar_object_key` varchar, `preferred_language` varchar, `is_active` boolean, `must_change_password` boolean, `last_login_at`, `deleted_at` timestamptz | Accounts; deletion is a soft delete and can be reverted |
+| `users` | `id` uuid, `email` varchar unique, `password_hash` varchar, `display_name` varchar, `avatar_object_key` varchar, `preferred_language` varchar, `is_active` boolean, `must_change_password` boolean, `totp_secret` varchar, `totp_enabled` boolean, `last_login_at`, `deleted_at` timestamptz | Accounts; deletion is a soft delete and can be reverted |
 | `groups` | `id` uuid, `name` varchar unique, `description` varchar, `is_system` boolean | Organizations (household, club); the system group `admin` holds the administrators |
 | `user_groups` | `user_id`, `group_id` uuid (composite key), `invited_by` uuid, `joined_at` timestamptz | Group membership |
 | `permissions` | `id` uuid, `perm_key` varchar unique, `description` varchar | Available permission keys |
@@ -219,6 +222,7 @@ erDiagram
 | Feature | Description | Members |
 | --- | --- | --- |
 | Authentication and sessions | Login, logout, session check, Redis sessions, lockout after failed attempts, forced password change | nluchini, cbauer, poverbec, ghambrec |
+| Two-factor authentication | Setup with QR code in the profile, encrypted secret, code step at login, disable | ghambrec |
 | User administration | Create, edit, soft delete and restore users, reset passwords | poverbec, nluchini, ghambrec |
 | Profile | Display name, language, avatar upload, password change, own groups | poverbec, cbauer |
 | Groups and memberships | Create, edit and delete groups, add and remove members | cbauer, ghambrec |
@@ -251,7 +255,8 @@ erDiagram
 | File upload and management | Minor | 1 | Type and size validation, storage in MinIO, preview, progress, delete | nluchini, ghambrec |
 | Advanced search | Minor | 1 | Filters, sorting, pagination, ranking and highlighting | ghambrec |
 | Multiple languages | Minor | 1 | English, German, Spanish with Transloco | ghambrec, poverbec |
-| **Total** | | **18** | | |
+| Two-factor authentication (2FA) | Minor | 1 | TOTP with authenticator app, setup with QR code in the profile, code step at login | ghambrec |
+| **Total** | | **19** | | |
 
 ### Justification per module
 
@@ -268,10 +273,11 @@ We chose these modules because they describe what a document archive for several
 - **File upload and management (Minor):** Uploads are the entry point of the product and the main attack surface. Type, content and size validation, MinIO storage, preview and progress make uploads safe and usable.
 - **Advanced search (Minor):** An archive is only useful if documents can be found again. Ranked search over metadata and extracted text, with filters, sorting and pagination, covers the cases that plain tag browsing does not.
 - **Multiple languages (Minor):** Our users and OCR documents are German, English and Spanish, so the interface and the analysis language support need to match.
+- **Two-factor authentication (Minor):** The archive holds contracts, invoices and insurance papers, so a stolen password should not be enough to read them. TOTP works with any authenticator app, needs no SMS or mail service and fits a self-hosted installation.
 
 ## Individual Contributions
 
-- **ghambrec:** document frontend (list, upload, preview, detail, review, search, tags), search backend, AI ingestion pipeline (worker, extraction, analysis, chunking, embeddings), review endpoints, Docker setup with Caddy, HTTPS and network separation.
+- **ghambrec:** document frontend (list, upload, preview, detail, review, search, tags), search backend, AI ingestion pipeline (worker, extraction, analysis, chunking, embeddings), review endpoints, two-factor authentication, Docker setup with Caddy, HTTPS and network separation.
 - **nluchini:** NestJS project setup, authentication and session handling, documents module with validation and MinIO storage, tags and permissions backend, TypeORM migrations, GitHub Actions and the end-to-end test environment.
 - **poverbec:** user management backend and frontend, profile page, retrieval and conversation logic in the AI service, chat interface, Prometheus and Grafana monitoring.
 - **cbauer:** groups and group membership in backend and frontend, permission editor, login and profile views.
@@ -300,6 +306,7 @@ We chose these modules because they describe what a document archive for several
 - [NestJS documentation](https://docs.nestjs.com/)
 - [Angular documentation](https://angular.dev/)
 - [TypeORM documentation](https://typeorm.io/)
+- [RFC 6238: TOTP](https://datatracker.ietf.org/doc/html/rfc6238)
 - [FastAPI documentation](https://fastapi.tiangolo.com/)
 - [Pydantic AI documentation](https://ai.pydantic.dev/)
 - [pgvector](https://github.com/pgvector/pgvector)
@@ -310,7 +317,16 @@ We chose these modules because they describe what a document archive for several
 
 ### Use of AI
 
-AI assistants (Claude, GitHub Copilot) were used to explain concepts and libraries, to review code and discuss alternatives, to find the cause of errors, to draft configuration (Docker Compose, Caddy), and to write and polish documentation such as this README, code comments and API descriptions. The results were read, tested and adapted by the team; every member can explain the code they are responsible for. Inside the product, language models are used for summaries, tag suggestions and chat answers as described above.
+AI assistants (Claude, GitHub Copilot) were used throughout the project for these tasks:
+
+- **Learning:** explaining concepts, libraries and standards behind the NestJS backend and the AI service, for example sessions, TypeORM migrations, RAG or TOTP.
+- **Code review and debugging:** reviewing our code in the NestJS backend, the Angular frontend and the AI service, pointing out security problems, and finding the cause of errors.
+- **Software testing:** testing finished features in the running application, for example clicking through the login, profile and document views in the Chrome browser and checking API flows such as the two-factor login against the separate test stack.
+- **Planning and concept:** breaking features into steps, comparing approaches and their trade-offs, and discussing the structure of modules, the data model and the API before implementation
+- **Translations:** drafting the German, English and Spanish interface texts of the Angular frontend.
+- **Documentation:** writing and polishing this README, code comments and the Swagger API descriptions.
+
+The results were read, tested and adapted by the team; every member can explain the code they are responsible for. Inside the product, language models are used for summaries, tag suggestions and chat answers as described above.
 
 ## Repository layout
 
