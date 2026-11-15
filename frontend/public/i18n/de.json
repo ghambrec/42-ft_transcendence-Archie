@@ -184,6 +184,8 @@
 		"message": {
 			"label": "Chat-Nachrichten",
 			"sources": "Quellen",
+			"sourceChunks": "Abschnitte",
+			"sourceSimilarity": "Übereinstimmung",
 			"confidenceScore": "Konfidenzwert",
 			"sender": {
 				"user": "Benutzer",
@@ -192,7 +194,8 @@
 		},
 		"hint": {
 			"sending": "Ihre Frage",
-			"ask": "Stellen Sie eine Frage zu Ihren Dokumenten ..."
+			"ask": "Stellen Sie eine Frage zu Ihren Dokumenten ...",
+			"empty": "Kein Chat ausgewählt. Stellen Sie eine Frage, um einen neuen Chat zu starten."
 		},
 		"button": {
 			"send": "Senden",

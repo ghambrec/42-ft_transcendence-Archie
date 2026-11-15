@@ -6,6 +6,7 @@ import { firstValueFrom, Subject, takeUntil } from 'rxjs';
 import { chatErrorKey } from './chat-errors';
 import { NgbModal } from '@ng-bootstrap/ng-bootstrap';
 import { ConversationsService } from './conversations.service';
+import type { ChatMessage } from './chat.models';
 import { ChatMessageList } from './chat-message-list/chat-message-list';
 import { ChatComposer } from './chat-composer/chat-composer';
 import { DeleteChatModal } from './delete-chat-modal/delete-chat-modal';
@@ -37,11 +38,16 @@ export class AIChat {
   readonly createConversationError = signal<string | null>(null);
   readonly isSending = signal(false);
   readonly sendError = signal<string | null>(null);
+  readonly pendingQuestion = signal<string | null>(null);
   readonly isDeleting = signal(false);
   readonly messageResource = this.conversationService.messageResource(this.activeConversationId);
   readonly messages = computed(() => {
-    if (this.messageResource.hasValue()) return this.messageResource.value().data;
-    return [];
+    const loaded = this.messageResource.hasValue() ? this.messageResource.value().data : [];
+    const question = this.pendingQuestion();
+    if (question === null) return loaded;
+    // show the question right away, until the real messages are loaded
+    const pending: ChatMessage = { id: 'pending', conv_id: '', sender: 'user', content: question, created_at: '' };
+    return [...loaded, pending];
   });
   readonly isOpeningConversation = this.messageResource.isLoading;
   readonly openConversationError = computed(() =>
@@ -61,8 +67,12 @@ export class AIChat {
       this.cancelActiveRequest();
       this.draftConversationId = null;
       this.draft.set('');
+      this.pendingQuestion.set(null);
       this.sendError.set(null);
       this.createConversationError.set(null);
+    });
+    effect(() => {
+      if (!this.isSending() && !this.isOpeningConversation()) this.pendingQuestion.set(null);
     });
   }
 
@@ -84,6 +94,8 @@ export class AIChat {
     let conversationId = selectedId ?? this.draftConversationId;
     this.sendError.set(null);
     this.isSending.set(true);
+    this.draft.set('');
+    this.pendingQuestion.set(question);
     const cancelled = new Subject<void>();
     this.activeRequest = cancelled;
     try {
@@ -95,7 +107,6 @@ export class AIChat {
       if (this.destroyRef.destroyed || this.activeRequest !== cancelled) return;
       await firstValueFrom(this.conversationService.ask(conversationId, question).pipe(takeUntil(cancelled)));
       if (this.destroyRef.destroyed || this.activeConversationId() !== selectedId) return;
-      this.draft.set('');
       if (selectedId) {
         this.messageResource.reload();
       } else {
@@ -104,6 +115,7 @@ export class AIChat {
     } catch (error) {
       if (!this.destroyRef.destroyed && this.activeRequest === cancelled && this.activeConversationId() === selectedId) {
         this.sendError.set(chatErrorKey(error));
+        this.draft.set(question);
         this.conversationService.conversationsResource.reload();
         if (selectedId) this.messageResource.reload();
       }

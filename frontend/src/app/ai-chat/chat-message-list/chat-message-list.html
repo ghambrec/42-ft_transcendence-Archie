@@ -2,13 +2,19 @@
   [attr.aria-label]="'ai-chat.message.label' | transloco" tabindex="0" (scroll)="onMessagesScroll()">
   @for (message of messages(); track message.id) {
     <app-chat-message [message]="message" />
+  } @empty {
+    @if (!conversationId() && !isLoading()) {
+      <p class="text-body-secondary text-center mt-5">{{ 'ai-chat.hint.empty' | transloco }}</p>
+    }
   }
 </div>
 <div class="chat-status" role="status">
   @if (isSending()) {
-    <p>{{ 'ai-chat.status.thinking' | transloco }}</p>
+    <p class="text-body-secondary">
+      <span class="spinner-border spinner-border-sm me-2" aria-hidden="true"></span>{{ 'ai-chat.status.thinking' | transloco }}
+    </p>
   }
-  @if (isLoading()) {
+  @if (isLoading() && messages().length === 0) {
     <p>{{ 'ai-chat.history.opening' | transloco }}</p>
   }
 </div>

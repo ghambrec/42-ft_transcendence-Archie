@@ -184,6 +184,8 @@
 		"message": {
 			"label": "Mensajes del chat",
 			"sources": "Fuentes",
+			"sourceChunks": "Fragmentos",
+			"sourceSimilarity": "Coincidencia",
 			"confidenceScore": "Nivel de confianza",
 			"sender": {
 				"user": "Usuario",
@@ -192,7 +194,8 @@
 		},
 		"hint": {
 			"sending": "Su pregunta",
-			"ask": "Haga una pregunta sobre sus documentos..."
+			"ask": "Haga una pregunta sobre sus documentos...",
+			"empty": "Ningún chat seleccionado. Haga una pregunta para iniciar un nuevo chat."
 		},
 		"button": {
 			"send": "Enviar",

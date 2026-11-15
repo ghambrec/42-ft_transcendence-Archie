@@ -2,17 +2,18 @@
   <label for="chat-question" class="visually-hidden">{{ 'ai-chat.hint.sending' | transloco }}</label>
   <textarea #questionInput id="chat-question" class="form-control" rows="2" maxlength="1000"
     [placeholder]="'ai-chat.hint.ask' | transloco" [disabled]="busy()"
-    [value]="draft()" (input)="draft.set(questionInput.value)"></textarea>
-  <div class="d-flex flex-wrap align-items-start gap-3 pt-3">
+    [value]="draft()" (input)="draft.set(questionInput.value)"
+    (keydown.enter)="onEnter($event)"></textarea>
+  <div class="d-flex flex-wrap align-items-start gap-2 pt-3">
     <button type="button" class="btn btn-primary" [disabled]="!draft().trim() || busy()"
-      (click)="sendRequested.emit()">
+      (click)="send()">
       {{ 'ai-chat.button.send' | transloco }}
     </button>
-    <button type="button" class="btn btn-secondary" [disabled]="!canDeleteChat() || busy()"
+    <button type="button" class="btn btn-outline-secondary ms-auto" [disabled]="!canDeleteChat() || busy()"
       (click)="deleteRequested.emit()">
       {{ 'ai-chat.button.Delete_chat' | transloco }}
     </button>
-    <button type="button" class="btn btn-secondary" [disabled]="!canDeleteAll() || busy()"
+    <button type="button" class="btn btn-outline-secondary" [disabled]="!canDeleteAll() || busy()"
       (click)="deleteAllRequested.emit()">
       {{ 'ai-chat.button.Delete_all_chats' | transloco }}
     </button>

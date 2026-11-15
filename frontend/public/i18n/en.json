@@ -184,6 +184,8 @@
 	  "message": {
 	    "label": "Chat messages",
 	    "sources": "Sources",
+			"sourceChunks": "Passages",
+			"sourceSimilarity": "Match",
 	    "confidenceScore": "Confidence score",
 	    "sender": {
 	      "user": "User",
@@ -192,7 +194,8 @@
 	  },
 	  "hint": {
 	    "sending": "Your question",
-	    "ask": "Ask about your documents..."
+	    "ask": "Ask about your documents...",
+			"empty": "No chat selected. Ask a question to start a new chat."
 	  },
 	  "button": {
 	    "send": "Send",
