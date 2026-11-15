@@ -33,26 +33,26 @@ describe('SessionAuthGuard password-change policy', () => {
   });
 
   it('blocks ordinary requests when the flag is true even after a successful login', async () => {
-    await expect(guard.canActivate(context('GET', '/documents'))).rejects.toMatchObject({ status: 403, message: 'PASSWORD_CHANGE_REQUIRED' });
+    await expect(guard.canActivate(context('GET', '/api/documents'))).rejects.toMatchObject({ status: 403, message: 'PASSWORD_CHANGE_REQUIRED' });
   });
 
   it('allows ordinary requests when the flag is false even without a last-login date', async () => {
     user = { mustChangePassword: false, lastLoginAt: null };
-    await expect(guard.canActivate(context('GET', '/documents'))).resolves.toBe(true);
+    await expect(guard.canActivate(context('GET', '/api/documents'))).resolves.toBe(true);
   });
 
   it.each([
-    ['PATCH', '/users/me/password'], ['GET', '/auth/logout'], ['GET', '/users/me'],
+    ['PATCH', '/api/users/me/password'], ['GET', '/api/auth/logout'], ['GET', '/api/users/me'],
   ])('permits recovery action %s %s while a password change is required', async (method, path) => {
     await expect(guard.canActivate(context(method, path))).resolves.toBe(true);
   });
 
   it('does not exempt the administrative password endpoint', async () => {
-    await expect(guard.canActivate(context('PATCH', '/users/target/password'))).rejects.toMatchObject({ status: 403 });
+    await expect(guard.canActivate(context('PATCH', '/api/users/target/password'))).rejects.toMatchObject({ status: 403 });
   });
 
   it('still rejects missing sessions', async () => {
     get.mockResolvedValue(null);
-    await expect(guard.canActivate(context('GET', '/users/me'))).rejects.toMatchObject({ status: 401 });
+    await expect(guard.canActivate(context('GET', '/api/users/me'))).rejects.toMatchObject({ status: 401 });
   });
 });

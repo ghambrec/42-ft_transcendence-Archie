@@ -87,6 +87,7 @@ export class DocDetail {
 	protected onRetry(docId: string) {
 		this.run(this.review.retryAiIngestion(docId), () => {
 			this.docs.detail.reload();
+			this.docs.list.reload();
 			this.review.queue.reload();
 		});
 	}

@@ -44,9 +44,9 @@ export class SessionAuthGuard implements CanActivate {
     const method = req.method.toUpperCase();
     const path = req.path;
 
-    const isPasswordPatch = method === 'PATCH' && path === '/users/me/password';
-    const isLogout = method === 'GET' && path === '/auth/logout';
-    const isGetMe = method === 'GET' && path === '/users/me';
+    const isPasswordPatch = method === 'PATCH' && path === '/api/users/me/password';
+    const isLogout = method === 'GET' && path === '/api/auth/logout';
+    const isGetMe = method === 'GET' && path === '/api/users/me';
 
     if (user.mustChangePassword && !isPasswordPatch && !isLogout && !isGetMe) {
       throw new ForbiddenException('PASSWORD_CHANGE_REQUIRED');

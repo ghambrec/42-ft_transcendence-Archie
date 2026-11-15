@@ -26,6 +26,11 @@ CREATE TABLE IF NOT EXISTS ai_chunks (
 CREATE INDEX IF NOT EXISTS ai_chunks_ai_document_id_idx ON ai_chunks (ai_document_id);
 CREATE INDEX IF NOT EXISTS ai_chunks_embedding_hnsw_idx ON ai_chunks USING hnsw (embedding vector_cosine_ops);
 
+-- trigram indexe fuer die dokumentensuche
+CREATE EXTENSION IF NOT EXISTS pg_trgm;
+CREATE INDEX IF NOT EXISTS ai_documents_ai_summary_trgm_idx ON ai_documents USING gin (ai_summary gin_trgm_ops);
+CREATE INDEX IF NOT EXISTS ai_chunks_content_trgm_idx ON ai_chunks USING gin (content gin_trgm_ops);
+
 CREATE TABLE IF NOT EXISTS ai_document_tags (
 	id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
 	ai_document_id UUID NOT NULL REFERENCES ai_documents(id) ON DELETE CASCADE,

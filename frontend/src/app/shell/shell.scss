@@ -1,0 +1,26 @@
+// unter dem lg-breakpoint von bootstrap wird die sidebar zur einklappbaren schublade
+@media (max-width: 991.98px) {
+	app-sidebar {
+		position: fixed;
+		top: 0;
+		bottom: 0;
+		left: 0;
+		z-index: 1045; // ueber dem backdrop (1040)
+		max-width: 85vw;
+		transform: translateX(-100%);
+		visibility: hidden;
+		transition: transform 0.2s ease-in-out, visibility 0.2s;
+
+		&.open {
+			transform: none;
+			visibility: visible;
+			box-shadow: var(--bs-box-shadow);
+		}
+	}
+}
+
+@media (prefers-reduced-motion: reduce) {
+	app-sidebar {
+		transition: none;
+	}
+}

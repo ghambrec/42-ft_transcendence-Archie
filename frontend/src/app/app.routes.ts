@@ -12,7 +12,29 @@ export const routes: Routes = [
 		path: 'login',
 		component: Login,
 		canActivate: [guestGuard],
-		title: 'Login',
+		title: 'pageTitle.login',
+	},
+	{
+		path: 'signup',
+		loadComponent: () =>
+			import('./auth/signup/signup').then((m) => m.Signup),
+		canActivate: [guestGuard],
+		title: 'pageTitle.signup',
+	},
+	// legal pages, reachable without login
+	{
+		path: 'privacy',
+		loadComponent: () =>
+			import('./legal/legal-page/legal-page').then((m) => m.LegalPage),
+		data: { doc: 'privacy' },
+		title: 'pageTitle.privacy',
+	},
+	{
+		path: 'terms',
+		loadComponent: () =>
+			import('./legal/legal-page/legal-page').then((m) => m.LegalPage),
+		data: { doc: 'terms' },
+		title: 'pageTitle.terms',
 	},
 	{
 		path: '',
@@ -28,29 +50,29 @@ export const routes: Routes = [
 				path: 'documents',
 				loadComponent: () =>
         			import('./documents/doc-page/doc-page').then((m) => m.DocPage),
-				title: 'Documents',
+				title: 'pageTitle.documents',
 			},
 			{
 				path: 'ai-chat',
 				component: AIChat,
-				title: 'AI Chat',
+				title: 'pageTitle.aiChat',
 			},
 			{
 				path: 'ai-chat/:id',
 				component: AIChat,
-				title: 'AI Chat',
+				title: 'pageTitle.aiChat',
 			},
 			{
 				path: 'profile',
 				loadComponent: () =>
 					import('./profile/profile').then((m) => m.Profile),
-				title: 'Profile',
+				title: 'pageTitle.profile',
 			},
 			{
 				path: 'settings',
 				component: Settings,
 				canActivate: [adminGuard],
-				title: 'Settings'
+				title: 'pageTitle.settings'
 			}
 		],
 	},

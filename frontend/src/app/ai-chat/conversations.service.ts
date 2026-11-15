@@ -1,8 +1,8 @@
-import { HttpClient, httpResource } from '@angular/common/http';
+import { HttpClient, HttpEventType, httpResource } from '@angular/common/http';
 import { computed, inject, Service, signal, type Signal } from '@angular/core';
-import { defer, finalize, tap, timeout, type Observable } from 'rxjs';
+import { defer, finalize, last, tap, timeout, type Observable } from 'rxjs';
 import { environment } from '../../environments/environment';
-import type { CreateConversationResponse, AskConversationResponse, DeleteConversation,
+import type { CreateConversationResponse, DeleteConversation,
   Conversation, ListResponse, ChatMessage } from './chat.models';
 
 @Service()
@@ -40,10 +40,18 @@ export class ConversationsService {
     ).pipe(timeout(environment.chatRequestTimeoutMs)));
   }
 
-  ask(conversationId: string, question: string) {
-    return this.mutate(this.http.post<AskConversationResponse>(
-      `${this.baseUrl}/${conversationId}/ask`, { question }, { withCredentials: true }
-    ).pipe(timeout(environment.chatRequestTimeoutMs)));
+  // the answer is streamed, onText gets the text received so far
+  ask(conversationId: string, question: string, onText: (text: string) => void) {
+    return this.mutate(this.http.post(
+      `${this.baseUrl}/${conversationId}/ask`, { question },
+      { withCredentials: true, responseType: 'text', observe: 'events', reportProgress: true }
+    ).pipe(
+      timeout(environment.chatRequestTimeoutMs),
+      tap(event => {
+        if (event.type === HttpEventType.DownloadProgress && 'partialText' in event) onText(event.partialText ?? '');
+      }),
+      last(),
+    ));
   }
 
   renameConversation(conversationId: string, title: string) {

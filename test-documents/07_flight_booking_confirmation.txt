@@ -1,0 +1,18 @@
+SKYWAY AIRLINES - BOOKING CONFIRMATION
+
+Booking reference: QX7M2P
+Passenger: WHITMORE / DANIEL MR
+Booked on: October 20, 2026
+
+OUTBOUND  Saturday, July 10, 2027
+SW 482  Portland (PDX) 08:15  ->  Frankfurt (FRA) 06:40 (+1)
+Class: Economy Flex   Baggage: 1 x 23 kg   Seat: 24C
+
+RETURN    Sunday, July 25, 2027
+SW 483  Frankfurt (FRA) 11:30  ->  Portland (PDX) 13:45
+Class: Economy Flex   Baggage: 1 x 23 kg   Seat: 24C
+
+Total price: USD 1,148.60 (incl. taxes and fees), paid by credit card ending 9028
+Free rebooking up to 48 hours before departure, cancellation fee USD 150.
+
+Please check in online starting 24 hours before departure. Passport required.

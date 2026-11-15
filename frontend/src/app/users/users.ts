@@ -73,6 +73,7 @@ export interface CurrentUser {
 	preferredLanguage: SupportedLanguage;
 	isAdmin: boolean;
 	hasToChangePassword: boolean;
+	twoFactorEnabled: boolean;
 }
 
 @Service()

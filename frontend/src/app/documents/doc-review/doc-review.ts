@@ -1,4 +1,4 @@
-import { Component, computed, effect, inject, signal } from '@angular/core';
+import { Component, computed, effect, inject, signal, untracked } from '@angular/core';
 import { DocumentsReview, isAiProcessing } from '../documents-review';
 import { TranslocoPipe, TranslocoService } from '@jsverse/transloco';
 import { DocReviewCard } from '../doc-review-card/doc-review-card';
@@ -23,6 +23,16 @@ export class DocReview {
 			const intervalId = setInterval(() => this.reviewService.queue.reload(), 3000);
 			onCleanup(() => clearInterval(intervalId));
 		})
+
+		// doc liste neu laden sobald ein doc mit der ki verarbeitung fertig ist
+		effect(() => {
+			const current = this.processingIds();
+			const finished = [...this.previousProcessingIds].some(id => !current.has(id));
+			this.previousProcessingIds = current;
+			if (finished) {
+				untracked(() => this.documentsService.list.reload());
+			}
+		})
 	}
 
 	protected readonly reviewService = inject(DocumentsReview);
@@ -35,7 +45,12 @@ export class DocReview {
 
 	protected readonly queue = computed(() => this.reviewService.queue.hasValue() ? this.reviewService.queue.value() : []);
 
-	private readonly hasProcessingDocs = computed(() => this.queue().some(doc => isAiProcessing(doc.aiStatus)));
+	private readonly processingIds = computed(() =>
+		new Set(this.queue().filter(doc => isAiProcessing(doc.aiStatus)).map(doc => doc.id))
+	);
+	private previousProcessingIds = new Set<string>();
+
+	private readonly hasProcessingDocs = computed(() => this.processingIds().size > 0);
 
 	// doc auf busy setzen damit nicht zwei mal hintereinander buttons gedrueckt werden koennen
 	private setBusy(docId: string, busy: boolean) {
@@ -78,6 +93,7 @@ export class DocReview {
 			next: () => {
 				this.setBusy(docId, false);
 				this.reviewService.queue.reload();
+				this.documentsService.list.reload();
 			},
 			error: (err: HttpErrorResponse) => {
 				this.setBusy(docId, false);

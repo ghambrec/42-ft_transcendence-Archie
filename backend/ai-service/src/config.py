@@ -18,6 +18,7 @@ class Settings(BaseSettings):
     # --- APP
     ai_service_port: int
     ai_service_api_key: str
+    ai_service_reload: bool = False
 
     # --- LANGFUSE
     langfuse_enabled: bool = False

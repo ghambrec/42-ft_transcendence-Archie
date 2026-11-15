@@ -1,6 +1,17 @@
 {
 	"programName": "Archie",
+	"pageTitle": {
+		"login": "Iniciar sesión",
+		"signup": "Registrarse",
+		"privacy": "Política de privacidad",
+		"terms": "Términos del servicio",
+		"documents": "Documentos",
+		"aiChat": "Chat de IA",
+		"profile": "Perfil",
+		"settings": "Configuración"
+	},
 	"sidebar": {
+		"toggle": "Mostrar/ocultar navegación",
 		"settings": "Configuración",
 		"documents": "Documentos",
 		"dropdown": {
@@ -28,6 +39,41 @@
 			"uploaded": "Subido",
 			"noDocs": "No se encontraron documentos",
 			"errorLoading": "No se pudieron cargar los documentos"
+		},
+		"search": {
+			"placeholder": "Buscar documentos …",
+			"type": "Tipo",
+			"types": {
+				"pdf": "PDF",
+				"image": "Imagen",
+				"text": "Texto",
+				"word": "Word",
+				"excel": "Excel/CSV",
+				"archive": "Archivo comprimido"
+			},
+			"period": "Fecha",
+			"periods": {
+				"any": "Cualquier fecha",
+				"today": "Hoy",
+				"7d": "Últimos 7 días",
+				"30d": "Últimos 30 días",
+				"year": "Este año",
+				"lastYear": "El año pasado"
+			},
+			"from": "Desde",
+			"to": "Hasta",
+			"since": "desde {{ date }}",
+			"until": "hasta {{ date }}",
+			"group": "Grupo",
+			"reset": "Restablecer filtros",
+			"tagSuggestions": "Etiquetas coincidentes:",
+			"source": {
+				"content": "Contenido",
+				"summary": "Resumen"
+			},
+			"noResults": "No se encontraron documentos con estos filtros",
+			"noResultsFor": "Sin resultados para «{{ q }}»",
+			"searchEverywhere": "Buscar en todos los documentos"
 		},
 		"upload": {
 			"upload": "Subir documentos",
@@ -149,6 +195,8 @@
 		"message": {
 			"label": "Mensajes del chat",
 			"sources": "Fuentes",
+			"sourceChunks": "Fragmentos",
+			"sourceSimilarity": "Coincidencia",
 			"confidenceScore": "Nivel de confianza",
 			"sender": {
 				"user": "Usuario",
@@ -157,7 +205,8 @@
 		},
 		"hint": {
 			"sending": "Su pregunta",
-			"ask": "Haga una pregunta sobre sus documentos..."
+			"ask": "Haga una pregunta sobre sus documentos...",
+			"empty": "Ningún chat seleccionado. Haga una pregunta para iniciar un nuevo chat."
 		},
 		"button": {
 			"send": "Enviar",
@@ -196,6 +245,8 @@
 		}
 	},
 	"login": {
+		"signupHint": "¿Aún no tienes cuenta?",
+		"signupLink": "Regístrate",
 		"email": "Correo electrónico",
 		"password": "Contraseña",
 		"submit": "Iniciar sesión",
@@ -205,6 +256,17 @@
 			"emailRequired": "El correo electrónico es obligatorio.",
 			"emailFormat": "Introduzca una dirección de correo electrónico válida.",
 			"passwordRequired": "La contraseña es obligatoria."
+		},
+		"twoFactor": {
+			"code": "Código",
+			"hint": "Introduzca el código de 6 dígitos de su aplicación de autenticación.",
+			"submit": "Confirmar",
+			"back": "Volver al inicio de sesión",
+			"errorInvalidCode": "El código no es válido o ha caducado",
+			"errors": {
+				"codeRequired": "El código es obligatorio.",
+				"codeFormat": "El código tiene 6 dígitos."
+			}
 		}
 	},
 	"auth": {
@@ -467,6 +529,20 @@
 			"required": "Introduzca una nueva contraseña.",
 			"maxLength": "La contraseña debe tener como máximo 25 caracteres.",
 			"pattern": "Incluya una letra mayúscula, una letra minúscula, un número y al menos uno de los caracteres !@#$%^&*."
+		},
+		"twoFactor": {
+			"heading": "Autenticación de dos factores",
+			"description": "Proteja su cuenta con un código adicional de una aplicación de autenticación.",
+			"enable": "Activar 2FA",
+			"scanHint": "Escanee el código QR con su aplicación de autenticación e introduzca el código que se muestra.",
+			"code": "Código",
+			"confirm": "Confirmar",
+			"active": "La autenticación de dos factores está activa.",
+			"disable": "Desactivar 2FA",
+			"error": "No se pudo cambiar la autenticación de dos factores.",
+			"invalidCode": "El código no es válido.",
+			"codeRequired": "Introduzca el código.",
+			"codeFormat": "El código tiene 6 dígitos."
 		}
 	},
 	"errors": {
@@ -480,7 +556,7 @@
 		"DOCUMENT_NOT_FOUND": "No se encontró el documento.",
 		"DOCUMENT_FILENAME_INVALID": "El nombre del archivo no es válido.",
 		"DOCUMENT_STILL_PROCESSING": "El documento todavía se está analizando.",
-		"DOCUMENT_INGESTION_NOT_RETRYABLE": "El análisis solo se puede reiniciar si falló o nunca se inició.",
+		"DOCUMENT_INGESTION_NOT_RETRYABLE": "El análisis no se puede reiniciar mientras está en curso o si fue omitido.",
 		"AI_SERVICE_UNAVAILABLE": "El servicio de IA no está disponible en este momento. Inténtelo de nuevo más tarde.",
 		"TAG_NOT_FOUND": "No se encontró la etiqueta.",
 		"FORBIDDEN": "No tiene permiso para realizar esta acción."
@@ -496,5 +572,18 @@
 			"timeout": "El análisis tardó demasiado y se canceló",
 			"unknown": "Se produjo un error desconocido durante el análisis"
 		}
+	},
+	"signup": {
+		"submit": "Crear cuenta",
+		"errorGeneral": "No se pudo completar el registro. Inténtalo de nuevo.",
+		"loginHint": "¿Ya tienes una cuenta?",
+		"loginLink": "Iniciar sesión"
+	},
+	"legal": {
+		"back": "Volver",
+		"privacy": "Política de privacidad",
+		"terms": "Términos del servicio",
+		"privacyText": "Archie es una plataforma de gestión documental autoalojada: cada instalación la gestiona su propio operador, por ejemplo un hogar o una asociación. El operador de esta instalación es responsable de los datos personales que contiene. Si tienes preguntas sobre tus datos, contacta con un administrador de esta instalación.\n\n## Qué datos se guardan\n\n- **Cuenta:** dirección de correo electrónico, nombre visible, contraseña (solo como hash, nunca en texto claro), idioma, imagen de perfil, fecha de tu último inicio de sesión, tus grupos y permisos.\n- **Documentos:** los archivos que subes, con nombre, tipo, tamaño, fecha de subida, quién lo subió, grupo y etiquetas.\n- **Resultados del análisis:** el texto leído de un documento (también de escaneos y fotos), un resumen, etiquetas sugeridas y un índice de búsqueda del texto.\n- **Chat:** tus preguntas, las respuestas y los documentos en los que se basa una respuesta.\n- **Datos técnicos:** tu sesión, los intentos fallidos de inicio de sesión de una dirección de correo y los registros del servidor.\n\n## Por qué se guardan\n\nLos datos son necesarios para ofrecerte Archie: para iniciar tu sesión, mostrar los documentos solo a quienes pueden leerlos, buscarlos y responder preguntas sobre ellos (art. 6.1.b RGPD). Los intentos de inicio de sesión y los registros se guardan para proteger el sistema y encontrar errores (art. 6.1.f RGPD). Los datos no se venden ni se usan para publicidad o seguimiento.\n\n## Análisis con IA\n\nCada documento subido se analiza automáticamente, y el chat lee fragmentos de los documentos que puedes leer para responder. Por defecto, los modelos de lenguaje se ejecutan en el servidor de esta instalación y el contenido se queda allí. El operador puede usar en su lugar un proveedor externo (OpenRouter). En ese caso, el texto de los documentos y las preguntas del chat se envían a ese proveedor. Un administrador puede decirte qué configuración está activa. No se toman decisiones automatizadas con efectos jurídicos sobre ti.\n\n## Dónde están los datos y quién puede verlos\n\nTodos los datos se guardan en el servidor de esta instalación y la conexión con tu navegador está cifrada (HTTPS). Los demás usuarios con sesión iniciada pueden ver tu nombre visible y tu imagen de perfil. Un documento es visible para los miembros de su grupo que tienen permiso de lectura, junto con tu nombre como persona que lo subió. Los administradores gestionan usuarios, grupos, permisos y etiquetas. Aparte del proveedor externo opcional y de las imágenes de perfil descritas más abajo, no se ceden datos a terceros.\n\n## Imágenes de perfil\n\nAl crear una cuenta, Archie genera una imagen de perfil por defecto con el servicio [DiceBear](https://www.dicebear.com). Para ello, tu nombre visible se envía una sola vez a api.dicebear.com. Después la imagen se guarda en el servidor de esta instalación, y puedes sustituirla por una propia en la página de perfil. Las imágenes usan el estilo «Big Smile», un remix de [Custom Avatar](https://www.figma.com/community/file/881358461963645496) de Ashley Seo, con licencia [CC BY 4.0](https://creativecommons.org/licenses/by/4.0/).\n\n## Cookies\n\nArchie usa una sola cookie. Mantiene tu sesión iniciada, es técnicamente necesaria y se elimina al cerrar sesión o, como máximo, a los siete días. No hay cookies de seguimiento ni de terceros.\n\n## Cuánto tiempo se guardan los datos\n\nLos datos se conservan mientras sean necesarios para tu cuenta. Los chats que eliminas se borran de inmediato. Un documento o una cuenta eliminados desaparecen de la aplicación, pero no se borran definitivamente al instante, para que un administrador pueda restaurarlos. Si quieres que se borren definitivamente, pídeselo a un administrador. Los intentos fallidos de inicio de sesión se eliminan al poco tiempo.\n\n## Tus derechos\n\nPuedes ver y modificar los datos de tu perfil en la página de perfil. También tienes derecho de acceso, rectificación, supresión, limitación del tratamiento, portabilidad y oposición. Para ejercer estos derechos, contacta con un administrador de esta instalación. También puedes presentar una reclamación ante una autoridad de protección de datos.\n\n*Última actualización: noviembre de 2026*",
+		"termsText": "Estos términos se aplican cuando usas esta instalación de Archie. Archie es una plataforma de gestión documental, desarrollada como proyecto de estudiantes en 42 Heilbronn y gestionada por el operador de esta instalación. Al usar Archie aceptas estos términos.\n\n## Tu cuenta\n\nNecesitas una cuenta para usar Archie. Elige una contraseña segura, mantenla en secreto y cambia la contraseña inicial en tu primer inicio de sesión. Eres responsable de lo que ocurra con tu cuenta. Avisa a un administrador si crees que otra persona la está usando.\n\n## Qué no está permitido\n\n- subir contenido ilegal o que no tengas derecho a guardar o compartir\n- subir malware o archivos destinados a dañar el sistema\n- intentar acceder a documentos, grupos o cuentas para los que no tienes permiso\n- eludir medidas de seguridad o sobrecargar el sistema con peticiones automatizadas\n\n## Tus documentos\n\nConservas todos los derechos sobre tus documentos. Al subir un documento aceptas que se almacene, se analice automáticamente y se muestre a los miembros de su grupo con permiso de lectura. Sube documentos con datos personales de otras personas solo si puedes compartirlos con ese grupo.\n\n## Resultados de la IA\n\nLos resúmenes, las etiquetas sugeridas y las respuestas del chat los generan modelos de lenguaje. Pueden ser incorrectos o incompletos, incluso si se muestra un valor de confianza o las fuentes. Comprueba el documento original antes de basarte en ellos. No constituyen asesoramiento jurídico, fiscal, financiero ni médico.\n\n## Administradores\n\nLos administradores deciden quién puede leer, subir, modificar o eliminar documentos en un grupo. Pueden cambiar permisos, quitar miembros y desactivar cuentas, por ejemplo si se incumplen estos términos.\n\n## Disponibilidad y responsabilidad\n\nArchie es un proyecto de estudiantes sin ánimo de lucro y se ofrece tal como es, sin garantía de que esté siempre disponible o libre de errores. No sustituye a una copia de seguridad, así que guarda tus propias copias de los documentos importantes. En la medida en que la ley lo permita, los desarrolladores y el operador no responden de la pérdida de datos, de resultados incorrectos de la IA ni de otros daños causados por el uso del software.\n\n## Cambios\n\nEstos términos pueden cambiar cuando cambie el software. La versión vigente está siempre disponible en esta página. El tratamiento de tus datos personales se describe en la Política de privacidad.\n\n*Última actualización: noviembre de 2026*"
 	}
 }

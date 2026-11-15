@@ -8,6 +8,7 @@ from src.generation.schemas import AnswerResponse, GeneratedAnswer, SourceCitati
 
 from uuid import UUID
 import asyncpg
+from collections.abc import AsyncIterator
 
 import logging
 
@@ -17,7 +18,7 @@ async def retrieval(user_id: UUID,
 					pool: asyncpg.Pool | asyncpg.Connection,
 					result_limit: int = settings.limit,
 					context_budget: int = settings.context_budget 
-					) -> AnswerResponse :
+					) -> AsyncIterator[str | AnswerResponse]:
 	try:
 		message_history = await load_conversation_messages(pool, conv_id)
 
@@ -35,12 +36,17 @@ async def retrieval(user_id: UUID,
 			context, context_chunks = build_context(chunks, context_budget)
 
 		with measure_chat_stage("generation"):
-			answer = await generate(question, context, message_history)
+			# pass the text pieces on, the last item is the full answer
+			async for item in generate(question, context, message_history):
+				if isinstance(item, str):
+					yield item
+				else:
+					answer = item
 	except Exception:
 		logging.exception("embedding, question, and context failed")
 		raise
 	
-	return enrich_answer(answer, context_chunks)
+	yield enrich_answer(answer, context_chunks)
 	
 
 async def load_conversation_messages(pool: asyncpg.Pool | asyncpg.Connection, conv_id: UUID) -> list[asyncpg.Record]:

@@ -1,4 +1,5 @@
-<div class="d-flex align-items-center justify-content-center vh-100 bg-light">
+<div class="d-flex flex-column align-items-center justify-content-center vh-100 bg-light">
+	@if (!challengeToken()) {
 	<form [formRoot]="loginForm" class="card p-4" style="width: 320px;">
 
 			<!-- logo -->
@@ -34,5 +35,55 @@
 			@if (loginForm().errors().length > 0) {
 				<p class="text-danger small mt-2 mb-0">{{ loginForm().errors()[0].message | transloco }}</p>
 			}
+
+			<!-- signup -->
+			<p class="small text-center mt-3 mb-0">
+				{{ 'login.signupHint' | transloco }}
+				<a routerLink="/signup">{{ 'login.signupLink' | transloco }}</a>
+			</p>
 	</form>
+	} @else {
+	<!-- 2fa code -->
+	<form [formRoot]="codeForm" class="card p-4" style="width: 320px;">
+
+			<!-- logo -->
+			<img src="images/logo.png" alt="" height="80" class="d-block mx-auto mb-3">
+
+			<p class="small text-secondary">{{ 'login.twoFactor.hint' | transloco }}</p>
+
+			<!-- code -->
+			<div class="mb-3">
+					<label class="form-label">{{ 'login.twoFactor.code' | transloco }}</label>
+					<input [formField]="codeForm.code" type="text" inputmode="numeric" autocomplete="one-time-code" class="form-control" />
+					@if (codeForm.code().touched() && codeForm.code().invalid()) {
+						<p class="text-danger small mb-0">{{ codeForm.code().errors()[0].message | transloco }}</p>
+					}
+			</div>
+
+			<!-- submit button -->
+			<button type="submit" class="btn btn-primary w-100" [disabled]="codeForm().submitting()">
+				{{ 'login.twoFactor.submit' | transloco }}
+			</button>
+
+			<!-- error message -->
+			@if (codeForm().errors().length > 0) {
+				<p class="text-danger small mt-2 mb-0">{{ codeForm().errors()[0].message | transloco }}</p>
+			}
+
+			<!-- back -->
+			<p class="small text-center mt-3 mb-0">
+				<a href="#" (click)="backToLogin(); $event.preventDefault()">{{ 'login.twoFactor.back' | transloco }}</a>
+			</p>
+	</form>
+	}
+
+	<!-- legal links -->
+	<div class="small text-secondary mt-3">
+		<a routerLink="/privacy" class="link-secondary text-decoration-none">{{ 'legal.privacy' | transloco }}</a>
+		<span class="mx-2">·</span>
+		<a routerLink="/terms" class="link-secondary text-decoration-none">{{ 'legal.terms' | transloco }}</a>
+	</div>
+
+	<!-- language -->
+	<app-language-switcher class="mt-3" />
 </div>

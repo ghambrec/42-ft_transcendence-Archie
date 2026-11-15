@@ -3,14 +3,30 @@
 	<div class="alert alert-danger">{{ "documents.list.errorLoading" | transloco }}</div>
 	} @else {
 	<div class="card shadow-sm overflow-hidden" [class.loading]="docs.list.isLoading()">
+		<div class="table-responsive">
 		<table class="table table-hover align-middle mb-0">
 			<thead>
 				<tr>
-					<th>{{ "documents.list.name" | transloco }}</th>
+					<th [attr.aria-sort]="ariaSort('name')">
+						<button type="button" class="sort-btn" (click)="filters.toggleSort('name')">
+							{{ "documents.list.name" | transloco }}
+							<i class="bi" [class]="sortIcon('name')"></i>
+						</button>
+					</th>
 					<th>{{ "documents.list.tags" | transloco }}</th>
 					<th>{{ "documents.list.groups" | transloco }}</th>
-					<th class="text-end">{{ "documents.list.size" | transloco }}</th>
-					<th>{{ "documents.list.uploaded" | transloco }}</th>
+					<th class="text-end" [attr.aria-sort]="ariaSort('size')">
+						<button type="button" class="sort-btn" (click)="filters.toggleSort('size')">
+							{{ "documents.list.size" | transloco }}
+							<i class="bi" [class]="sortIcon('size')"></i>
+						</button>
+					</th>
+					<th [attr.aria-sort]="ariaSort('createdAt')">
+						<button type="button" class="sort-btn" (click)="filters.toggleSort('createdAt')">
+							{{ "documents.list.uploaded" | transloco }}
+							<i class="bi" [class]="sortIcon('createdAt')"></i>
+						</button>
+					</th>
 				</tr>
 			</thead>
 			<tbody>
@@ -20,11 +36,20 @@
 						<div class="d-flex align-items-center gap-2">
 							<i class="bi bi-file-earmark-text text-secondary"></i>
 							<span class="text-truncate" [ngbTooltip]="doc.filename" container="body"
-								[openDelay]="400">{{ doc.filename }}</span>
+								[openDelay]="400">
+								<ngb-highlight [result]="doc.filename" [term]="filters.terms()" highlightClass="search-hit" />
+							</span>
 							@if (doc.aiStatus !== 'FINISHED') {
 							<app-doc-status-badge [status]="doc.aiStatus" />
 							}
 						</div>
+						<!-- textausschnitt um den suchtreffer -->
+						@if (doc.match; as match) {
+						<div class="doc-snippet">
+							<span class="snippet-source">{{ "documents.search.source." + match.source | transloco }}</span>
+							<ngb-highlight [result]="match.snippet" [term]="filters.terms()" highlightClass="search-hit" />
+						</div>
+						}
 					</td>
 					<td>
 						<div class="d-flex flex-wrap gap-1">
@@ -48,17 +73,38 @@
 				</tr>
 				} @empty {
 				<tr>
-					<td colspan="5" class="text-center text-muted py-4">{{ "documents.list.noDocs" | transloco
-						}}</td>
+					<td colspan="5" class="text-center text-muted py-4">
+						@if (filters.hasFilters()) {
+						<i class="bi bi-search fs-4 d-block mb-2"></i>
+						@if (filters.q()) {
+						<div>{{ "documents.search.noResultsFor" | transloco: { q: filters.q() } }}</div>
+						} @else {
+						<div>{{ "documents.search.noResults" | transloco }}</div>
+						}
+						<div class="d-flex justify-content-center gap-2 mt-3">
+							<button type="button" class="btn btn-sm btn-outline-secondary" (click)="filters.reset()">
+								{{ "documents.search.reset" | transloco }}
+							</button>
+							@if (tags.selectedTagId()) {
+							<button type="button" class="btn btn-sm btn-primary" (click)="filters.searchEverywhere()">
+								{{ "documents.search.searchEverywhere" | transloco }}
+							</button>
+							}
+						</div>
+						} @else {
+						{{ "documents.list.noDocs" | transloco }}
+						}
+					</td>
 				</tr>
 				}
 			</tbody>
 		</table>
+		</div>
 	</div>
 
 	@if (docs.shownPage().totalPages > 1) {
 	<ngb-pagination class="d-flex justify-content-center mt-3" [collectionSize]="docs.shownPage().total"
-		[pageSize]="docs.shownPage().limit" [page]="docs.page()" (pageChange)="docs.page.set($event)" [maxSize]="5"
+		[pageSize]="docs.shownPage().limit" [page]="filters.page()" (pageChange)="filters.setPage($event)" [maxSize]="5"
 		[rotate]="true" size="sm" />
 	}
 	}

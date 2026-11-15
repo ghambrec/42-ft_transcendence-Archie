@@ -23,7 +23,8 @@ import { ErrorCode } from '../src/common/errors/error-code';
 const ALL_DOCUMENT_PERMISSIONS = Object.values(DocumentPermission);
 
 const randomEmail = () => `e2e-${randomUUID()}@example.com`;
-const randomDisplayName = () => `e2e-${randomUUID()}`;
+// display name ist auf 25 zeichen begrenzt
+const randomDisplayName = () => `e2e-${randomUUID().slice(0, 13)}`;
 
 describe('DocumentsController (e2e)', () => {
   let app: INestApplication<App>;

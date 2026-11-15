@@ -3,8 +3,6 @@ services:
     image: pgvector/pgvector:pg18
     container_name: postgres
     restart: unless-stopped
-    ports:
-      - "5432:5432"
     env_file:
       - ./env/.env
     volumes:
@@ -16,7 +14,7 @@ services:
       timeout: 5s
       retries: 5
     networks:
-      - archie
+      - backend
 
 
   redis:
@@ -32,19 +30,7 @@ services:
       retries: 5
       start_period: 10s
     networks:
-      - archie
-
-  adminer:
-    image: adminer:latest
-    container_name: adminer
-    restart: unless-stopped
-    ports:
-      - "8080:8080"
-    networks:
-      - archie
-    depends_on:
-      postgres:
-        condition: service_healthy
+      - backend
 
   minio:
    image: pgsty/minio:RELEASE.2026-06-18T00-00-00Z
@@ -52,9 +38,6 @@ services:
    restart: unless-stopped
    env_file: "./env/.env"
    command: server /data --console-address ":9001"
-   ports:
-    - "9000:9000"
-    - "9001:9001"
    volumes:
      - minio_data:/data
    healthcheck:
@@ -64,7 +47,7 @@ services:
      retries: 5
      start_period: 10s
    networks:
-     - archie
+     - backend
 
 
   minio-init:
@@ -85,7 +68,7 @@ services:
      echo 'MinIO init done.'
      "
    networks:
-     - archie
+     - backend
 
   nest-server:
    build:
@@ -93,13 +76,10 @@ services:
      dockerfile: Dockerfile
    container_name: nest-server
    restart: unless-stopped
-   ports:
-     - "3000:3000"
-   volumes:
-     - ./backend/nest-server:/app
-     - nest-server-node-modules:/app/node_modules
    networks:
-     - archie
+     - edge
+     - backend
+     - monitoring
    env_file: "./env/.env"
    depends_on:
      postgres:
@@ -111,19 +91,18 @@ services:
     #  ai-service:
     #    condition: service_healthy
 
-  frontend:
+  caddy:
     build:
       context: ./frontend
       dockerfile: Dockerfile
-    container_name: frontend
+    container_name: caddy
     restart: unless-stopped
     ports:
-      - "4200:4200"
+      - "443:443"
     volumes:
-      - ./frontend:/app
-      - frontend-node-modules:/app/node_modules
+      - caddy_data:/data
     networks:
-      - archie
+      - edge
     depends_on:
       - nest-server
 
@@ -133,13 +112,9 @@ services:
       dockerfile: Dockerfile
     container_name: ai-service
     restart: unless-stopped
-    ports:
-      - "5001:5001"
-    volumes:
-      - ./backend/ai-service:/app
-      - ai-service-venv:/app/.venv
     networks:
-      - archie
+      - backend
+      - monitoring
     env_file: "./env/.env"
     healthcheck:
       test: ["CMD-SHELL", "curl -fsS http://localhost:5001/health || exit 1"]
@@ -163,12 +138,12 @@ services:
       dockerfile: Dockerfile
     container_name: ai-service-worker
     restart: unless-stopped
-    command: ["uv", "run", "watchfiles", "uv run arq src.worker.WorkerSettings", "src"]
-    volumes:
-      - ./backend/ai-service:/app
-      - ai-service-venv:/app/.venv
+    command: ["uv", "run", "arq", "src.worker.WorkerSettings"]
+    # worker has no http server, dockerfile healthcheck would fail
+    healthcheck:
+      disable: true
     networks:
-      - archie
+      - backend
     env_file: "./env/.env"
     depends_on:
       ai-service:
@@ -178,8 +153,6 @@ services:
     image: ollama/ollama:latest
     container_name: ollama
     restart: unless-stopped
-    ports:
-      - "11434:11434"
     env_file: "./env/.env"
     volumes:
       - ollama_data:/root/.ollama
@@ -190,7 +163,7 @@ services:
       retries: 5
       start_period: 15s
     networks:
-      - archie
+      - backend
       
   ollama-init:
     image: ollama/ollama:latest
@@ -208,22 +181,24 @@ services:
       echo 'ollama modules pulled'
       "
     networks:
-      - archie
+      - backend
 
 
   grafana: 
     image: grafana/grafana
     profiles: [monitoring]
-    ports:
-    - "3001:3000"
     volumes:
     - grafana_data:/var/lib/grafana
     - ./monitoring/grafana/provisioning:/etc/grafana/provisioning:ro
     - ./monitoring/grafana/dashboards:/etc/grafana/dashboards:ro
     networks:
-      - archie
+      - edge
+      - monitoring
     env_file:
       - "./env/.env"
+    environment:
+      GF_SERVER_ROOT_URL: https://localhost/grafana/
+      GF_SERVER_SERVE_FROM_SUB_PATH: "true"
 
   prometheus:
     image: prom/prometheus:latest
@@ -233,10 +208,8 @@ services:
     volumes:
       - ./monitoring/prometheus.yml:/etc/prometheus/prometheus.yml:ro
       - prometheus_data:/prometheus
-    extra_hosts:
-      - "host.docker.internal:host-gateway"
     networks:
-      - archie 
+      - monitoring
 
   cadvisor:
     image: ghcr.io/google/cadvisor:0.55.1
@@ -251,29 +224,32 @@ services:
       - /var/lib/docker:/var/lib/docker:ro
       - /dev/disk:/dev/disk:ro
     networks:
-      - archie
+      - monitoring
 
   node-exporter:
     image: quay.io/prometheus/node-exporter:latest
     profiles: [monitoring]
-    network_mode: host
     pid: host
     command:
       - "--path.rootfs=/host"
     volumes:
       - /:/host:ro,rslave
+    networks:
+      - monitoring
 
 networks:
-  archie:
+  edge:
+    driver: bridge
+  backend:
+    driver: bridge
+  monitoring:
     driver: bridge
 
 volumes:
   redis-data:
   postgres_data:
   minio_data:
-  nest-server-node-modules:
-  frontend-node-modules:
   ollama_data:
-  ai-service-venv:
   grafana_data:
   prometheus_data:
+  caddy_data:

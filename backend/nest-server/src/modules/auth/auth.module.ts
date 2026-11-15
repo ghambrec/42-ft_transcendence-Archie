@@ -8,12 +8,13 @@ import { SessionCookieService } from './session/session-cookie.service';
 import { SessionAuthGuard } from './guards/session-auth.guard';
 import { LoginAttemptService } from './login-attempt.service';
 import { PermissionsModule } from '../permissions/permissions.module';
+import { TwoFactorService } from './two-factor.service';
 
 @Module({
   imports: [UsersModule, SessionModule, PermissionsModule],
   controllers: [AuthController],
   // providers: [AuthService, SessionService, SessionCookieService, SessionAuthGuard, LoginAttemptService,],
-  providers: [AuthService, LoginAttemptService,],
+  providers: [AuthService, LoginAttemptService, TwoFactorService,],
   // exports: [SessionService, SessionCookieService, SessionAuthGuard,],
   exports: [SessionModule, PermissionsModule,],
 

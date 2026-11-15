@@ -38,15 +38,22 @@ export class ConversationsController {
 	})
 	@UseInterceptors(ChatDurationInterceptor)
 	@Post(':convId/ask')
-  async ask(@Req() req: Request, @Res({ passthrough: true }) res: Response,
+  async ask(@Req() req: Request, @Res() res: Response,
     @Param('convId', new ParseUUIDPipe()) id: string, @Body() dto: AskConversationDto) {
     const controller = new AbortController();
     const disconnect = () => { if (!res.writableEnded) controller.abort(); };
     res.once('close', disconnect);
+    const answer = await this.conversations.ask(req.userId!, id, dto.question, controller.signal);
+    // pass the answer text on to the browser while the ai-service is still writing it
+    res.type('text/plain');
     try {
-      return await this.conversations.ask(req.userId!, id, dto.question, controller.signal);
-    } finally {
-      res.off('close', disconnect);
+      const reader = answer.body.getReader();
+      for (let chunk = await reader.read(); !chunk.done; chunk = await reader.read()) {
+        res.write(chunk.value);
+      }
+      res.end();
+    } catch {
+      res.destroy();
     }
   }
 

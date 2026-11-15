@@ -13,7 +13,9 @@ COPY . .
 
 ENV CI=true
 
+RUN pnpm run build
+
 EXPOSE 3000
 
 # It is not the bust solution, but for me it enough for now.
-CMD ["sh", "-c", "pnpm run migration:run && exec pnpm run start:dev"]
+CMD ["sh", "-c", "pnpm run migration:run && exec node dist/main"]
