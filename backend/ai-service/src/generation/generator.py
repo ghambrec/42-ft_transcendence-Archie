@@ -19,7 +19,9 @@ SYSTEM_PROMPT = """ You analyze documents for a document management system
 
                     if the document contains matching document snippets, answer according to this snippets 
                     and evaluate briefly why you came to this answer and where you have foud it. 
-                    Add a confidence score according to the matching document snippet
+                    Add a confidence score according to the matching document snippet.
+                    The confidence score must be a number between 0 and 1,
+                    0 means no matching information, 1 means fully covered by the snippets. Never use negative values.
 
                     if there is no good matching document snippet for the question, 
                     evaluate it with a low confidence score, and state clearly state that informations are missing and 
