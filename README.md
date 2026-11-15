@@ -116,6 +116,7 @@ make test
 
 The team met regularly to plan, review progress and split the work by topic. Tasks were planned and tracked in Notion.
 
+- **Communication:** WhatsApp group for quick questions and coordination, Notion for tasks, notes and decisions.
 - **Version control:** GitHub with one feature branch per topic, merged into `main` through pull requests.
 - **Continuous integration:** GitHub Actions build the frontend and the backend on every pull request and run the backend end-to-end tests against PostgreSQL, Redis and MinIO service containers.
 
