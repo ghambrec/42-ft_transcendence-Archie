@@ -1,4 +1,4 @@
-<div class="d-flex align-items-center justify-content-center vh-100 bg-light">
+<div class="d-flex flex-column align-items-center justify-content-center vh-100 bg-light">
 	<form [formRoot]="loginForm" class="card p-4" style="width: 320px;">
 
 			<!-- logo -->
@@ -35,4 +35,11 @@
 				<p class="text-danger small mt-2 mb-0">{{ loginForm().errors()[0].message | transloco }}</p>
 			}
 	</form>
+
+	<!-- legal links -->
+	<div class="small text-secondary mt-3">
+		<a routerLink="/privacy" class="link-secondary text-decoration-none">{{ 'legal.privacy' | transloco }}</a>
+		<span class="mx-2">·</span>
+		<a routerLink="/terms" class="link-secondary text-decoration-none">{{ 'legal.terms' | transloco }}</a>
+	</div>
 </div>

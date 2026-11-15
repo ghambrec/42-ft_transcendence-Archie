@@ -3,14 +3,14 @@ import { email, form, FormField, FormRoot, required } from '@angular/forms/signa
 import { TranslocoPipe, TranslocoService } from '@jsverse/transloco';
 import { Auth } from '../auth';
 import { firstValueFrom } from 'rxjs';
-import { Router } from '@angular/router';
+import { Router, RouterLink } from '@angular/router';
 import { Users } from '../../users/users';
 import { NgbModal } from '@ng-bootstrap/ng-bootstrap';
 import { SetPassword } from '../set-password/set-password';
 
 @Component({
 	selector: 'app-login',
-	imports: [TranslocoPipe, FormRoot, FormField],
+	imports: [TranslocoPipe, FormRoot, FormField, RouterLink],
 	templateUrl: './login.html',
 	styleUrl: './login.scss',
 })

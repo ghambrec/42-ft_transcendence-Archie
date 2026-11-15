@@ -14,6 +14,21 @@ export const routes: Routes = [
 		canActivate: [guestGuard],
 		title: 'Login',
 	},
+	// legal pages, reachable without login
+	{
+		path: 'privacy',
+		loadComponent: () =>
+			import('./legal/legal-page/legal-page').then((m) => m.LegalPage),
+		data: { doc: 'privacy' },
+		title: 'Privacy Policy',
+	},
+	{
+		path: 'terms',
+		loadComponent: () =>
+			import('./legal/legal-page/legal-page').then((m) => m.LegalPage),
+		data: { doc: 'terms' },
+		title: 'Terms of Service',
+	},
 	{
 		path: '',
 		component: Shell,
