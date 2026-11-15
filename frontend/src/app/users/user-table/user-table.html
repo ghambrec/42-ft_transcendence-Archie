@@ -23,7 +23,7 @@
           </td>
           <td class="ps-0">{{ user.email }}</td>
           <td>{{ user.displayName }}</td>
-          <td>{{ user.lastLoginAt ?? '-' }}</td>
+          <td>{{ (user.lastLoginAt | date: 'dd.MM.yyyy, HH:mm') ?? '-' }}</td>
           <td>
             <i class="bi" [class.bi-check-square]="user.isActive" [class.bi-square]="!user.isActive"
               [attr.aria-label]="(user.isActive ? 'users.userList.active' : 'users.userList.inactive') | transloco"></i>
