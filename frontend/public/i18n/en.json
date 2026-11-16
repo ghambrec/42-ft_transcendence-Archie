@@ -1,6 +1,17 @@
 {
 	"programName": "Archie",
+	"pageTitle": {
+		"login": "Login",
+		"signup": "Sign up",
+		"privacy": "Privacy Policy",
+		"terms": "Terms of Service",
+		"documents": "Documents",
+		"aiChat": "AI Chat",
+		"profile": "Profile",
+		"settings": "Settings"
+	},
 	"sidebar": {
+		"toggle": "Toggle navigation",
 		"settings": "Settings",
 		"documents": "Documents",
 		"dropdown": {
@@ -28,6 +39,41 @@
 			"uploaded": "Uploaded",
 			"noDocs": "No documents found",
 			"errorLoading": "Error on loading documents"
+		},
+		"search": {
+			"placeholder": "Search documents …",
+			"type": "Type",
+			"types": {
+				"pdf": "PDF",
+				"image": "Image",
+				"text": "Text",
+				"word": "Word",
+				"excel": "Excel/CSV",
+				"archive": "Archive"
+			},
+			"period": "Date",
+			"periods": {
+				"any": "Any time",
+				"today": "Today",
+				"7d": "Last 7 days",
+				"30d": "Last 30 days",
+				"year": "This year",
+				"lastYear": "Last year"
+			},
+			"from": "From",
+			"to": "To",
+			"since": "since {{ date }}",
+			"until": "until {{ date }}",
+			"group": "Group",
+			"reset": "Reset filters",
+			"tagSuggestions": "Matching tags:",
+			"source": {
+				"content": "Content",
+				"summary": "Summary"
+			},
+			"noResults": "No documents found for these filters",
+			"noResultsFor": "No results for “{{ q }}”",
+			"searchEverywhere": "Search all documents"
 		},
 		"upload": {
 			"upload": "Upload Documents",
@@ -149,6 +195,8 @@
 	  "message": {
 	    "label": "Chat messages",
 	    "sources": "Sources",
+			"sourceChunks": "Passages",
+			"sourceSimilarity": "Match",
 	    "confidenceScore": "Confidence score",
 	    "sender": {
 	      "user": "User",
@@ -157,7 +205,8 @@
 	  },
 	  "hint": {
 	    "sending": "Your question",
-	    "ask": "Ask about your documents..."
+	    "ask": "Ask about your documents...",
+			"empty": "No chat selected. Ask a question to start a new chat."
 	  },
 	  "button": {
 	    "send": "Send",
@@ -196,6 +245,8 @@
 	  }
 	},
 	"login": {
+		"signupHint": "No account yet?",
+		"signupLink": "Sign up",
 		"email": "E-Mail",
 		"password": "Password",
 		"submit": "Log in",
@@ -205,6 +256,17 @@
 			"emailRequired": "Email is required.",
 			"emailFormat": "Please enter a valid email address.",
 			"passwordRequired": "Password is required."
+		},
+		"twoFactor": {
+			"code": "Code",
+			"hint": "Enter the 6-digit code from your authenticator app.",
+			"submit": "Confirm",
+			"back": "Back to log in",
+			"errorInvalidCode": "The code is invalid or expired",
+			"errors": {
+				"codeRequired": "Code is required.",
+				"codeFormat": "The code has 6 digits."
+			}
 		}
 	},
 	"auth": {
@@ -470,6 +532,20 @@
 			"required": "Enter a new password.",
 			"maxLength": "Password must be at most 25 characters long.",
 			"pattern": "Include an uppercase letter, a lowercase letter, a number, and at least one of !@#$%^&*."
+		},
+		"twoFactor": {
+			"heading": "Two-factor authentication",
+			"description": "Protect your account with an additional code from an authenticator app.",
+			"enable": "Enable 2FA",
+			"scanHint": "Scan the QR code with your authenticator app and enter the code it shows.",
+			"code": "Code",
+			"confirm": "Confirm",
+			"active": "Two-factor authentication is active.",
+			"disable": "Disable 2FA",
+			"error": "Two-factor authentication could not be changed.",
+			"invalidCode": "The code is invalid.",
+			"codeRequired": "Enter the code.",
+			"codeFormat": "The code has 6 digits."
 		}
 	},
 	"errors": {
@@ -483,7 +559,7 @@
 		"DOCUMENT_NOT_FOUND": "Document was not found.",
 		"DOCUMENT_FILENAME_INVALID": "The filename is invalid.",
 		"DOCUMENT_STILL_PROCESSING": "The document is still being analyzed.",
-		"DOCUMENT_INGESTION_NOT_RETRYABLE": "The analysis can only be restarted if it failed or was never started.",
+		"DOCUMENT_INGESTION_NOT_RETRYABLE": "The analysis cannot be restarted while it is running or was skipped.",
 		"AI_SERVICE_UNAVAILABLE": "The AI service is currently unavailable. Please try again later.",
 		"TAG_NOT_FOUND": "Tag was not found.",
 		"FORBIDDEN": "You don't have permission for this action."
@@ -499,5 +575,18 @@
 			"timeout": "Analysis took too long and was cancelled",
 			"unknown": "An unknown error occurred during analysis"
 		}
+	},
+	"signup": {
+		"submit": "Create account",
+		"errorGeneral": "Sign-up failed. Please try again.",
+		"loginHint": "Already have an account?",
+		"loginLink": "Log in"
+	},
+	"legal": {
+		"back": "Back",
+		"privacy": "Privacy Policy",
+		"terms": "Terms of Service",
+		"privacyText": "Archie is a document management platform that is self-hosted: every installation is run by its own operator, for example a household or a club. The operator of this installation is responsible for the personal data in it. If you have questions about your data, contact an administrator of this installation.\n\n## Which data is stored\n\n- **Account:** email address, display name, password (only as a hash, never in plain text), language, profile picture, time of your last login, your groups and permissions.\n- **Documents:** the files you upload, with file name, type, size, upload date, uploader, group and tags.\n- **Analysis results:** the text read from a document (also from scans and photos), a summary, suggested tags and a search index of the text.\n- **Chat:** your questions, the answers and the documents an answer is based on.\n- **Technical data:** your session, failed login attempts for an email address and server logs.\n\n## Why it is stored\n\nThe data is needed to provide Archie to you: to sign you in, to show documents only to people who are allowed to read them, to search them and to answer questions about them (Art. 6(1)(b) GDPR). Login attempts and logs are kept to protect the system and to find errors (Art. 6(1)(f) GDPR). The data is not sold and not used for advertising or tracking.\n\n## AI analysis\n\nEvery uploaded document is analysed automatically, and the chat reads passages from documents you are allowed to read in order to answer. By default the language models run on the server of this installation and the content stays there. The operator can use an external provider (OpenRouter) instead. In that case document text and chat questions are sent to this provider. An administrator can tell you which setting is active. No automated decisions with legal effect are made about you.\n\n## Where the data is and who can see it\n\nAll data is stored on the server of this installation, and the connection to your browser is encrypted (HTTPS). Other signed-in users can see your display name and profile picture. A document is visible to the members of its group who have the read permission, including your name as uploader. Administrators manage users, groups, permissions and tags. Apart from the optional external provider and the profile pictures described below, no data is passed on to third parties.\n\n## Profile pictures\n\nWhen an account is created, Archie generates a default profile picture with the service [DiceBear](https://www.dicebear.com). For this, your display name is sent once to api.dicebear.com. The picture is then stored on the server of this installation, and you can replace it with your own on the profile page. The pictures use the style \"Big Smile\", a remix of [Custom Avatar](https://www.figma.com/community/file/881358461963645496) by Ashley Seo, licensed under [CC BY 4.0](https://creativecommons.org/licenses/by/4.0/).\n\n## Cookies\n\nArchie sets one cookie. It keeps you signed in, is technically necessary and is removed when you log out or after seven days at the latest. There are no tracking or third-party cookies.\n\n## How long data is kept\n\nData is kept as long as it is needed for your account. Chats you delete are removed immediately. A deleted document or account disappears from the application but is not erased right away, so that an administrator can restore it. If you want it to be erased permanently, ask an administrator. Failed login attempts are removed after a short time.\n\n## Your rights\n\nYou can view and change your profile data on the profile page. You also have the right to access, rectification, erasure, restriction of processing, data portability and objection. To use these rights, contact an administrator of this installation. You can also lodge a complaint with a data protection authority.\n\n*Last updated: November 2026*",
+		"termsText": "These terms apply when you use this Archie installation. Archie is a document management platform, developed as a student project at 42 Heilbronn and run by the operator of this installation. By using Archie you agree to these terms.\n\n## Your account\n\nYou need an account to use Archie. Choose a strong password, keep it secret and change an initial password on your first login. You are responsible for what happens under your account. Tell an administrator if you think someone else is using it.\n\n## What is not allowed\n\n- uploading content that is illegal or that you are not allowed to store or share\n- uploading malware or files meant to damage the system\n- trying to access documents, groups or accounts you have no permission for\n- bypassing security measures or overloading the system with automated requests\n\n## Your documents\n\nYou keep all rights to your documents. By uploading a document you agree that it is stored, analysed automatically and shown to the members of its group who have the read permission. Only upload documents that contain personal data of other people if you are allowed to share them with that group.\n\n## AI results\n\nSummaries, suggested tags and chat answers are generated by language models. They can be wrong or incomplete, even if a confidence score or sources are shown. Check the original document before you rely on them. They are not legal, tax, financial or medical advice.\n\n## Administrators\n\nAdministrators decide who may read, upload, change or delete documents in a group. They can change permissions, remove members and deactivate accounts, for example if these terms are violated.\n\n## Availability and liability\n\nArchie is a non-commercial student project and is provided as it is, without a guarantee that it is always available or free of errors. It does not replace a backup, so keep your own copies of important documents. As far as the law permits, the developers and the operator are not liable for lost data, wrong AI results or other damage caused by using the software.\n\n## Changes\n\nThese terms can change when the software changes. The current version is always available on this page. How your personal data is handled is described in the Privacy Policy.\n\n*Last updated: November 2026*"
 	}
 }

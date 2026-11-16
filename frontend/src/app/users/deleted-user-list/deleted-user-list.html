@@ -15,7 +15,7 @@
           <td class="pe-0"><i class="bi bi-person-circle fs-3 text-body-secondary" aria-hidden="true"></i></td>
           <td class="ps-0">{{ user.email }}</td>
           <td>{{ user.displayName }}</td>
-          <td>{{ (user.deletedAt | date: 'dd.MM.yyyy HH:mm') ?? '-' }}</td>
+          <td>{{ (user.deletedAt | date: 'dd.MM.yyyy, HH:mm') ?? '-' }}</td>
           <td>
             <button type="button" class="btn btn-outline-primary d-flex align-items-center gap-2"
               (click)="restoreRequested.emit(user)" [title]="'users.userList.restore' | transloco">

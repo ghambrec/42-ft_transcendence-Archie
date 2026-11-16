@@ -265,6 +265,7 @@ export class UsersService implements OnApplicationBootstrap {
         preferredLanguage: true,
         isActive: true,
         mustChangePassword: true,
+        totpEnabled: true,
       }
     })
     if(!user) {
@@ -274,8 +275,8 @@ export class UsersService implements OnApplicationBootstrap {
     )}
 
 	const isAdmin = await this.permissionsService.isUserAdmin(userId);
-    const { mustChangePassword, ...profile } = user;
-    return {...profile, isAdmin, hasToChangePassword: mustChangePassword};
+    const { mustChangePassword, totpEnabled, ...profile } = user;
+    return {...profile, isAdmin, hasToChangePassword: mustChangePassword, twoFactorEnabled: totpEnabled};
   }
 
   async getDeletedUsers(request: GetUsersQueryDto): Promise<GetUsersResponseDto> {
@@ -381,6 +382,10 @@ export class UsersService implements OnApplicationBootstrap {
 
   async recordSuccessfulLogin(userId: string, lastLoginAt: Date): Promise<void> {
     await this.usersRepository.update(userId, { lastLoginAt });
+  }
+
+  async setTwoFactor(userId: string, totpSecret: string | null, totpEnabled: boolean): Promise<void> {
+    await this.usersRepository.update(userId, { totpSecret, totpEnabled });
   }
 }
 

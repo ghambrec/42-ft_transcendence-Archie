@@ -6,6 +6,7 @@ import { Tag, Tags } from '../tags/tags';
 import { ActivatedRoute, Router } from '@angular/router';
 import { toSignal } from '@angular/core/rxjs-interop';
 import { map } from 'rxjs';
+import { DocFilters } from './doc-filters';
 
 export interface UploadConfig {
 	maxSizeBytes: number;
@@ -33,6 +34,13 @@ export interface DocumentSummary {
 	language: string;
 	aiErrorKey?: string | null;
 	previewable: boolean;
+	match?: DocumentMatch;
+}
+
+// textausschnitt um den ersten suchtreffer, nur bei einer textsuche gesetzt
+export interface DocumentMatch {
+	source: 'content' | 'summary';
+	snippet: string;
 }
 
 export interface DocumentsPage {
@@ -50,6 +58,7 @@ const EMPTY_PAGE: DocumentsPage = { data: [], page: 1, limit: PAGE_SIZE, total: 
 export class Documents {
 	private readonly http = inject(HttpClient);
 	private readonly tags = inject(Tags);
+	private readonly filters = inject(DocFilters);
 	private readonly router = inject(Router);
 	private readonly route = inject(ActivatedRoute);
 	private readonly baseUrl = `${environment.apiUrl}/documents`;
@@ -71,22 +80,30 @@ export class Documents {
 		});
 	}
 
-	// current doc page, bei wechsel zurueck auf 1
-	readonly page = linkedSignal({
-		source: this.tags.selectedTagId,
-		computation: () => 1
-	});
-
-	// doc liste laedt neu sobald sich tag oder page aendert
+	// doc liste laedt neu sobald sich tag, suche, filter, sortierung oder page aendert
 	readonly list = httpResource<DocumentsPage>(() => {
 		const tagId = this.tags.selectedTagId();
+		const q = this.filters.q();
+		const types = this.filters.types();
+		const groupIds = this.filters.groupIds();
+		const createdFrom = this.filters.createdFrom();
+		const createdTo = this.filters.createdTo();
+		const sort = this.filters.sort();
+
 		return {
 			url: this.baseUrl,
 			withCredentials: true,
 			params: {
-				page: this.page(),
+				page: this.filters.page(),
 				limit: PAGE_SIZE,
-				...(tagId ? { tagId: tagId, includeDescendants: true } : {})
+				...(tagId ? { tagId: tagId, includeDescendants: true } : {}),
+				...(q ? { q } : {}),
+				...(types.length ? { type: types } : {}),
+				...(groupIds.length ? { groupId: groupIds } : {}),
+				...(createdFrom ? { createdFrom } : {}),
+				...(createdTo ? { createdTo } : {}),
+				// ohne sort entscheidet das backend: relevanz bei textsuche, sonst name
+				...(sort ? { sort, order: this.filters.order() } : {})
 			}
 		};
 	},

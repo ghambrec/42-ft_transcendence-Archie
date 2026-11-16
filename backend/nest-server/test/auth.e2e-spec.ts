@@ -12,7 +12,8 @@ import { User } from '../src/modules/users/entities/user.entity';
 import { Group } from '../src/modules/groups/entities/group.entity';
 
 const randomEmail = () => `e2e-${randomUUID()}@example.com`;
-const randomDisplayName = () => `e2e-${randomUUID()}`;
+// display name ist auf 25 zeichen begrenzt
+const randomDisplayName = () => `e2e-${randomUUID().slice(0, 13)}`;
 
 describe('AuthController (e2e)', () => {
   let app: INestApplication<App>;

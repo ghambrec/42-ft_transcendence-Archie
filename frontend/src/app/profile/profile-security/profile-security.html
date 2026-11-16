@@ -24,3 +24,47 @@
     </form>
   </div>
 </div>
+
+<!-- 2fa -->
+<div class="card shadow-sm mt-4">
+  <div class="card-body">
+    <h2 class="h5 mb-3">{{ 'profile.twoFactor.heading' | transloco }}</h2>
+
+    @if (twoFactorEnabled()) {
+      <p class="text-muted">{{ 'profile.twoFactor.active' | transloco }}</p>
+
+      <button type="button" class="btn btn-outline-danger" (click)="disableTwoFactor()">
+        {{ 'profile.twoFactor.disable' | transloco }}
+      </button>
+    } @else if (qrCode(); as qrCodeUrl) {
+      <p class="text-muted">{{ 'profile.twoFactor.scanHint' | transloco }}</p>
+
+      <img [src]="qrCodeUrl" alt="" width="200" height="200" class="d-block mb-3">
+
+      <form [formRoot]="codeForm">
+        <fieldset [disabled]="codeForm().submitting()">
+          <app-form-field inputId="profile-two-factor-code" autocomplete="one-time-code"
+            labelKey="profile.twoFactor.code" [field]="codeForm.code" />
+
+          @if (codeForm().errors()[0]?.message; as errorKey) {
+            <div class="alert alert-danger" role="alert">{{ errorKey | transloco }}</div>
+          }
+
+          <button type="submit" class="btn btn-primary" [disabled]="codeForm().submitting()">
+            {{ 'profile.twoFactor.confirm' | transloco }}
+          </button>
+        </fieldset>
+      </form>
+    } @else {
+      <p class="text-muted">{{ 'profile.twoFactor.description' | transloco }}</p>
+
+      <button type="button" class="btn btn-primary" (click)="startTwoFactorSetup()">
+        {{ 'profile.twoFactor.enable' | transloco }}
+      </button>
+    }
+
+    @if (twoFactorError(); as errorKey) {
+      <div class="alert alert-danger mt-3" role="alert">{{ errorKey | transloco }}</div>
+    }
+  </div>
+</div>

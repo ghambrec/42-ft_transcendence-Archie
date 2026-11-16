@@ -1,14 +1,15 @@
 """conversation routes for the AI Service."""
 
 from fastapi import APIRouter, Request, Security, Depends, HTTPException
+from fastapi.responses import StreamingResponse
 from uuid import UUID
 from pydantic import BaseModel, Field, StringConstraints
 from typing import Annotated
 
 from src.api.auth import check_api_key, get_user_id
 from src.conversations import conversations
-from src.generation.schemas import AnswerResponse
 
+import asyncio
 import logging
 from src.config import settings
 from src.conversations.errors import classify_chat_error
@@ -45,25 +46,53 @@ async def get_conversations(request: Request, user_id: UUID = Depends(get_user_i
     return {"count": len(rows), "data": rows}
 
 
-@router.post("/conversations/{conv_id}/ask", response_model=AnswerResponse, summary="ask a question to a conversation from a user")
+@router.post("/conversations/{conv_id}/ask", summary="ask a question to a conversation from a user, the answer text is streamed")
 async def ask(request: Request, body: AskRequest, conv_id: UUID, user_id: UUID = Depends(get_user_id)):
     pool = request.app.state.db_pool
+    queue = asyncio.Queue()
+
+    # the whole chat runs in one task, the text pieces come back through the queue
+    async def produce():
+        try:
+            async for text in conversations.ask_question(pool, user_id, conv_id, body.question):
+                await queue.put(text)
+            await queue.put(None)
+        except Exception as error:
+            await queue.put(error)
+
+    task = asyncio.create_task(produce())
     try:
-        content = await run_chat_request(
-            conversations.ask_question(pool, user_id, conv_id, body.question),
+        # wait for the first piece, so everything that fails before is still a normal http error
+        first = await run_chat_request(
+            queue.get(),
             request.is_disconnected,
             timeout_seconds=settings.chat_timeout_seconds,
         )
+        if isinstance(first, Exception):
+            raise first
     except conversations.UserNotFoundError:
         raise HTTPException(status_code=400, detail="user does not exist")
     except conversations.ConversationNotFoundError:
         raise HTTPException(status_code=404, detail={"code": "AI_CONVERSATION_NOT_FOUND", "retryable": False})
     except Exception as error:
+        task.cancel()
         failure = classify_chat_error(error)
         logging.getLogger(__name__).warning("Chat request failed: %s", failure.code)
         headers = {"Retry-After": str(failure.retry_after_seconds)} if failure.retry_after_seconds is not None else None
         raise HTTPException(status_code=failure.status, detail=failure.payload(), headers=headers) from error
-    return content
+
+    async def answer_text():
+        try:
+            item = first
+            while item is not None:
+                if isinstance(item, Exception):
+                    raise item
+                yield item
+                item = await queue.get()
+        finally:
+            task.cancel()
+
+    return StreamingResponse(answer_text(), media_type="text/plain; charset=utf-8")
 
 
 @router.get("/conversations/{conv_id}/messages", summary="get all messages to a conversation from a user")

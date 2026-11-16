@@ -1,266 +1,344 @@
+*This project has been created as part of the 42 curriculum by ghambrec, nluchini, poverbec, cbauer.*
+
 # Archie — AI-Assisted Document Management
 
-Archie is a self-hosted document management platform being developed for **ft_transcendence**. It is designed for individuals and households who want to organize invoices, contracts, insurance policies, and tax records, ask questions about their contents, and track resulting tasks.
+## Description
 
-The project combines document storage, household access control, and AI analysis. Its goal is to reduce manual filing and make information retrievable through both structured search and a document-grounded chat interface.
+Archie is a self-hosted document management platform, built as our **ft_transcendence** project. It is made for households and small clubs who want to keep invoices, contracts, insurance policies and similar papers in one place, find them again quickly, and ask questions about their content.
 
-**Status:** under development. This README describes the existing repository and the target architecture separately. The module allocation below comes from the project concept; it is a planning estimate, not a statement of completed evaluation requirements.
+Users upload documents into groups. Every upload is analysed in the background: the text is extracted (including OCR for scans and photos), summarised, tagged and indexed. Afterwards the documents can be found through a filtered full-text search or queried in a chat that answers only from documents the user is allowed to read and names its sources.
 
-## Ports
-- **Angular Frontend:** 4200
-- **NestJS Backend:** 3000 -> documentation available at /docs
-- **Postgres:** 5432
-- **MinIO API:** 9000
-- **MinIO Web Console:** 9001
-- **AI-Service:** 5001
+### Key features
 
-## Product scope and implementation status
+- **Accounts and sessions:** sign-up and login with server-side sessions in Redis, forced password change on first login, login attempt lockout, optional two-factor authentication with an authenticator app, profile with avatar and language.
+- **Groups as organizations:** administrators create groups, add and remove members, and grant permissions per user and group.
+- **Permissions:** `documents.read`, `documents.upload`, `documents.update` and `documents.delete` are checked per group on every document route and in the AI retrieval. Administration views are only available to admins.
+- **Document management:** validated upload (file type, real content type, size limit), listing, preview, download, rename, move to another group, delete.
+- **AI analysis:** text extraction from PDF, images (OCR in German, English and Spanish), DOCX, ODT, XLSX, XLS, CSV, Markdown and plain text; language detection, summary and tag suggestions with confidence values.
+- **Review:** AI tag suggestions are confirmed or corrected by the user, failed analyses can be restarted.
+- **Tags:** hierarchical tags in two facets (`domain`, `doctype`), maintained by admins.
+- **Advanced search:** search terms over filename, tags, summary, uploader, group and extracted text with relevance ranking and highlighted snippets; filters for group, tag, file type and date range; sorting and pagination.
+- **Document chat (RAG):** conversations with history, answers with confidence score and source documents, restricted to readable documents.
+- **Internationalization:** English, German and Spanish user interface.
+- **Monitoring:** Prometheus metrics for both backends and all containers, Grafana dashboards.
+- **Deployment:** one command, HTTPS through Caddy, internal services not reachable from outside.
 
-| Capability | Current implementation | Planned outcome |
-| --- | --- | --- |
-| User management | Authentication, Redis-backed sessions, profiles, avatars, and login attempt controls | Complete multi-user experience with two-factor authentication |
-| Household management | Groups, memberships, permissions, and document-to-group assignment | Households as organizations with configurable sharing and parent/child access |
-| Document storage | Upload, metadata persistence, paginated listing, and streamed download through NestJS; files in MinIO | Validated uploads, previews, progress feedback, and scan capture |
-| AI analysis | Queued ingestion, language detection, summaries, tag suggestions, chunking, and embeddings | Structured extraction of amounts, deadlines, counterparties, and contract terms |
-| Text extraction | UTF-8 byte decoding | PDF parsing and OCR for scans and images |
-| Document chat | Embeddings and vector storage provide the indexing foundation | Permission-aware retrieval-augmented generation (RAG), with source references |
-| Search and tax view | Document listing currently exposes pagination | Filters by type, date, tags, and tax year |
-| Tasks and notifications | Planned | Suggested payment and contract tasks, reminders, and completion tracking |
-| Internationalization | Transloco integration and English, German, and Spanish translation files | Consistent localization across the application |
-| Analytics and PWA | Planned | Expense/category dashboards, installation on mobile devices, and controlled offline access |
-| Operations | Docker Compose, persistent volumes, and infrastructure/AI health checks | HTTPS deployment, a system status page, and automated backup and recovery |
-
-The current extractor does **not** parse PDFs or perform OCR. Start AI ingestion experiments with UTF-8 text files; storing a file does not imply that the AI service can analyze its format.
-
-## Architecture
-
-```mermaid
-flowchart TD
-    Browser[Angular web application] --> API[NestJS API]
-    API --> DB[(PostgreSQL + pgvector)]
-    API --> Storage[(MinIO: documents and avatars)]
-    API --> Redis[(Redis: sessions and job queue)]
-    API --> AI[FastAPI ingestion endpoint]
-    AI --> Redis
-    Redis --> Worker[ARQ ingestion worker]
-    Worker --> Storage
-    Worker --> DB
-    Worker --> Ollama[Ollama: local models and embeddings]
-    Worker -. optional generation provider .-> OpenRouter[OpenRouter]
-```
-
-| Component | Technology | Responsibility |
-| --- | --- | --- |
-| Frontend | Angular 22, TypeScript, Bootstrap, Transloco | Authentication, documents, profiles, users, groups, and settings |
-| Application backend | NestJS 11, TypeORM, PostgreSQL driver | HTTP API, validation, sessions, authorization, metadata, and storage access |
-| AI API and worker | Python 3.14+, FastAPI, ARQ, Pydantic AI | Asynchronous document analysis and indexing |
-| Relational and vector database | PostgreSQL 18 with pgvector | Application records, analysis state, extracted chunks, and embeddings |
-| Object storage | MinIO, S3-compatible API | Original document and avatar bytes |
-| Sessions and queue | Redis | Server-side sessions and background ingestion jobs |
-| Model runtime | Ollama; optional OpenRouter generation | Summarization, classification, and embeddings |
-| Development orchestration | Docker Compose | Services, initialization jobs, networking, and persistent volumes |
-
-TypeORM manages application migrations. The AI service uses asyncpg and its own SQL initialization for AI tables. Changes to shared tables must be coordinated between these two paths.
-
-## Document processing
-
-### Existing ingestion pipeline
-
-1. An authenticated user uploads a file to NestJS using multipart form data.
-2. The backend stores the bytes in MinIO and records metadata including the uploader, object key, filename, MIME type, byte size, and SHA-256 hash.
-3. NestJS calls the AI service's `POST /ingest/{doc_id}` endpoint with an internal API key.
-4. FastAPI initializes the analysis record and queues an ARQ job, returning HTTP `202`.
-5. The worker loads the file, decodes its text, detects its language, and requests a structured summary and tags from the configured model.
-6. Text is split into overlapping chunks. Ollama generates embeddings, which are stored with the chunks in PostgreSQL.
-7. Processing state is recorded as `PENDING`, `PROCESSING`, `FINISHED`, or `FAILED`, with error details when processing fails.
-
-Tags have two facets: `domain` describes a subject area such as insurance or housing, and `doctype` describes a document form such as invoice or contract. The analyzer can reuse existing tags or persist proposals with confidence values.
-
-The current vector schema expects **1,024-dimensional embeddings** and uses an HNSW cosine index. Changing the embedding model requires checking dimensional compatibility and planning re-indexing. Analysis input is truncated according to the configured provider limit, so a summary may omit information from a long document.
-
-### Planned question-answering pipeline
-
-For a question such as “What are the conditions of my legal expenses insurance?”, the intended RAG flow is:
-
-1. Resolve the authenticated user's permitted documents from household membership and sharing rules.
-2. Embed the question and retrieve relevant chunks within that permitted document set.
-3. Give the model the question and retrieved evidence, treating document text as data rather than instructions.
-4. Return an answer with references to the original documents and pages where available.
-5. State when the retrieved evidence is insufficient to answer.
-
-Authorization must constrain retrieval before document content reaches the model. Answers, source links, summaries, and future caches must follow the same access rules as downloads.
-
-### Planned tasks and tax-year view
-
-Structured extraction will turn an invoice into a suggested task such as “Pay invoice XY by July 15.” Tasks should retain their source document, extracted deadline, assigned user, and completion status. Users must be able to review and correct AI suggestions.
-
-The tax-year view will combine dates, tax relevance, tags, and search filters to collect a year's records. Dedicated tax-category classification, annual exports, and missing-receipt detection are optional extensions beyond this base view.
-
-## Data and access model
-
-| Record | Purpose |
-| --- | --- |
-| Users | Accounts, profiles, and language preferences |
-| Groups and memberships | Existing foundation for household organization |
-| Permissions and user permissions | Application and group-scoped authorization |
-| Documents | Uploader, object reference, file metadata, hash, and lifecycle timestamps |
-| Document groups | Association between documents and groups |
-| AI documents | Analysis status, summary, detected language, and processing errors |
-| AI chunks | Chunk text, document reference, and embedding |
-| Tags and AI document tags | Hierarchical classification, suggestions, and confidence |
-
-The target household policy gives parents access to shared household records and children access to their own relevant records, such as school or club documents. Sharing should be configurable rather than derived solely from an account's family label.
-
-**Current limitation:** document list, detail, and download queries are uploader-scoped. Group assignment and permission infrastructure exist, but the complete household sharing behavior remains to be implemented. MinIO stores objects; NestJS must enforce document access. Storage credentials alone do not implement parent/child permissions.
-
-## Local development
+## Instructions
 
 ### Prerequisites
 
-- Docker Engine with Docker Compose support.
-- Internet access for initial image builds, dependency installation, and model downloads.
-- Available RAM and disk space for the configured Ollama models and stored documents; requirements depend on model choice and document volume.
-- GNU Make if using the repository's convenience targets.
+- Docker Engine with Docker Compose v2.24 or newer.
+- GNU Make.
+- Internet access for the first start (image builds, dependency installation, model downloads).
+- Free port 443.
+- Enough RAM and disk space for the configured Ollama models.
 
-### Configure and start
+### Configure
 
-From the repository root, create the local configuration if it does not already exist:
+From the repository root, create the local configuration:
 
 ```sh
 cp -n env/.env.example env/.env
 ```
 
-Edit `env/.env` before starting:
+Edit `env/.env` before the first start:
 
-- Set database credentials, the seeded administrator account/password, MinIO credentials, and a strong `AI_SERVICE_API_KEY`.
-- Set **`LLM_PROVIDER=ollama`** for local generation. The example currently selects `openrouter`; that mode requires a valid `OPENROUTER_API_KEY` and sends analysis content to the external provider.
-- Review generation and embedding model names. Embeddings currently use Ollama even when generation uses OpenRouter.
-- Leave `LANGFUSE_ENABLED=false` unless an independently configured Langfuse instance is available. Langfuse is not included in this Compose stack.
+- Set the database credentials, the seeded administrator account (`ADMIN_USER`, `ADMIN_USER_PASSWORD`), the MinIO credentials, the Grafana admin password and a strong `AI_SERVICE_API_KEY`.
+- Set `TOTP_ENCRYPTION_KEY` to your own value, generated with `openssl rand -base64 32`. It encrypts the two-factor secrets in the database; if it changes, users have to set up two-factor authentication again.
+- `LLM_PROVIDER=ollama` keeps generation local. `openrouter` requires a valid `OPENROUTER_API_KEY` and sends analysis content to the external provider. Embeddings always use Ollama.
+- Leave `LANGFUSE_ENABLED=false` unless a separately configured Langfuse instance is available.
 
-Start the stack with one command after configuration:
-
-```sh
-docker compose up --build -d
-```
-
-Compose initializes PostgreSQL, MinIO buckets (`documents` and `avatars`), an application storage user, and Ollama models. The NestJS container runs migrations before starting; the AI container initializes its SQL tables. The first startup can take longer because the Ollama initializer downloads all three configured models, including the vision model, even when generation uses OpenRouter.
-
-Check startup and processing logs:
+### Start
 
 ```sh
-docker compose ps
-docker compose logs -f nest-server ai-service ai-service-worker
+make
 ```
 
-### Development endpoints
+`make` (same as `make up`) builds the images and starts the production stack including monitoring: the Angular build is served by Caddy, NestJS runs the compiled application, and the AI service runs without reload. The NestJS container runs the database migrations before it starts, the AI container creates its own tables. The first start takes longer because the Ollama initializer downloads the configured models.
 
-| Service | Local address |
-| --- | --- |
-| Angular application | http://localhost:4200 |
-| NestJS API | http://localhost:3000 |
-| NestJS Swagger documentation | http://localhost:3000/api |
-| AI service health | http://localhost:5001/health |
-| MinIO API | http://localhost:9000 |
-| MinIO console | http://localhost:9001 |
-| Adminer | http://localhost:8080 |
-| Ollama | http://localhost:11434 |
-| PostgreSQL | `localhost:5432` |
+Open https://localhost afterwards. Caddy issues the certificate from its own local authority, so the browser shows a certificate warning that has to be accepted once. Log in with the administrator account from `env/.env`; the application asks for a new password on the first login.
 
-Redis is available inside the Compose network and does not publish a host port. The current configuration uses HTTP and development servers; it is not the finished HTTPS evaluation deployment.
+For development use the dev stack instead:
+
+```sh
+make dev
+```
+
+It adds `docker-compose.dev.yml` on top: source directories are mounted, NestJS, the AI service, the worker and the Angular dev server restart on file changes, and some ports are published on `127.0.0.1`. The entry point stays https://localhost. Run `make down` before switching between the two stacks.
+
+### Endpoints
+
+| Service | Address | Stack |
+| --- | --- | --- |
+| Application | https://localhost | prod and dev |
+| NestJS API | https://localhost/api | prod and dev |
+| Swagger documentation | https://localhost/api/docs | prod and dev |
+| Grafana | https://localhost/grafana | prod and dev |
+| Prometheus | http://127.0.0.1:9090 | prod and dev |
+| NestJS API, direct | http://127.0.0.1:3000 | dev only |
+| MinIO console | http://127.0.0.1:9001 | dev only |
+| Adminer | http://127.0.0.1:8080 | dev only |
+| PostgreSQL | `127.0.0.1:5432` | dev only |
+
+Only port 443 is published to the network. Ports bound to `127.0.0.1` are reachable from the local machine only. Redis, the MinIO API, the AI service and Ollama do not publish a host port in either stack.
 
 ### Useful commands
 
 ```sh
-# Stop services while retaining persistent volumes
-docker compose down
+# Stop prod or dev stack, volumes are kept
+make down
+
+# Remove containers and images / also remove all volumes (deletes stored data)
+make clean
+make fclean
+
+# Follow the logs
+docker compose logs -f nest-server ai-service ai-service-worker
 
 # Backend unit tests
 docker compose exec nest-server pnpm test --runInBand
-
-# Frontend tests
-docker compose exec frontend pnpm test --watch=false
-
-# Compile both applications
-docker compose exec nest-server pnpm run build
-docker compose exec frontend pnpm run build
 
 # Backend end-to-end tests with separate test infrastructure
 make test
 ```
 
-`make test` uses `docker-compose.test.yml` and `env/.env.test`; it does not exercise the complete AI pipeline. `make fclean` removes application volumes, including stored data, and should only be used for an intentional reset.
+`make test` uses `docker-compose.test.yml` and `env/.env.test` and does not touch the data of the running stack.
 
-## API surface
+## Team Information
 
-The running NestJS Swagger UI at `/api` describes request and response DTOs. Selected document operations are:
-
-| Method | Route | Purpose |
+| Member | Role | Responsibilities |
 | --- | --- | --- |
-| `POST` | `/documents/upload/:groupId` | Upload a multipart `file` and assign it to the group |
-| `GET` | `/documents` | List the current user's documents with `page` and `limit` |
-| `GET` | `/documents/:id` | Read document metadata |
-| `GET` | `/documents/:id/download` | Stream the original document |
+| ghambrec | Product Owner, Technical Lead, Developer | Document frontend (list, upload, preview, review, search, tags), AI ingestion pipeline, Docker and HTTPS infrastructure |
+| nluchini | Technical Lead, Developer | NestJS foundation, authentication and sessions, documents and storage backend, tags, permissions, CI and end-to-end tests |
+| poverbec | Project Manager, Developer | User management backend and frontend, profile, RAG retrieval and conversations, chat frontend, monitoring |
+| cbauer | Developer | Groups and memberships backend and frontend, profile and login views |
 
-These routes require a session. The separate AI ingestion endpoint uses the `X-API-KEY` header and is intended for backend-to-service communication. Use streamed downloads; the existing pre-signed URL endpoint is marked “Don't use it” in the controller.
+## Project Management
 
-## Self-hosting and operational roadmap
+The team met regularly to plan, review progress and split the work by topic. Tasks were planned and tracked in Notion.
 
-The intended deployment is a home server or another standard Docker host. Before evaluation or deployment beyond local development, the planned work includes:
+- **Communication:** WhatsApp group for quick questions and coordination, Notion for tasks, notes and decisions.
+- **Version control:** GitHub with one feature branch per topic, merged into `main` through pull requests.
+- **Continuous integration:** GitHub Actions build the frontend and the backend on every pull request and run the backend end-to-end tests against PostgreSQL, Redis and MinIO service containers.
 
-- Add an HTTPS reverse proxy and certificate configuration, using a trusted certificate or an evaluation certificate as appropriate. Align frontend API URLs, CORS, session cookies, and service transport with that deployment.
-- Keep database, object storage administration, model runtime, and internal AI endpoints off public interfaces; review the development port mappings.
-- Complete household authorization across document access, retrieval, tasks, and analytics.
-- Add file type and size validation, PDF extraction, OCR, and reliable retry/reconciliation for failed ingestion.
-- Implement backups covering PostgreSQL metadata and MinIO originals together, with retention and tested restoration. Docker volumes provide persistence, not backups.
-- Expand health checks into a status view and verify recovery after service failures.
-- Define explicit offline document caching, logout cleanup, and cache revocation behavior for the PWA.
+## Technical Stack
 
-The local Ollama path supports processing on the host. External generation and optional tracing change where document content can be sent and should be configured deliberately.
+| Layer | Technology | Why |
+| --- | --- | --- |
+| Frontend | Angular 22, TypeScript, Bootstrap, Transloco | Complete framework with routing, forms and HTTP client included; strict typing shared with the backend language |
+| Backend | NestJS 11, TypeORM | Modular structure with guards and validation pipes fits a permission-heavy API; migrations keep the schema reproducible |
+| AI service | Python 3.14, FastAPI, ARQ, Pydantic AI | The Python ecosystem offers the libraries for parsing, OCR and LLM access; long-running analyses run in a queue worker instead of a request |
+| Database | PostgreSQL 18 with pgvector and pg_trgm | One database for relational data, embeddings and trigram search, so permissions can be joined directly into vector and text queries |
+| Object storage | MinIO (S3-compatible) | Keeps file bytes out of the database and is self-hostable |
+| Sessions and queue | Redis | Server-side sessions that can be revoked, and the job queue for the worker |
+| Models | Ollama, optional OpenRouter | Documents stay on the own machine by default; an external provider can be enabled on purpose |
+| Reverse proxy | Caddy | HTTPS with automatic certificates, serves the Angular build, forwards `/api` and `/grafana` |
+| Monitoring | Prometheus, Grafana, cAdvisor, node-exporter | Metrics of the applications, the containers and the host in one place |
+| Orchestration | Docker Compose, Make | The whole stack starts with one command |
 
-## ft_transcendence module plan
+### Architecture
 
-The supplied project concept allocates **22 points**, against its stated minimum of **14**. Module eligibility and completion must be checked against the applicable subject during evaluation.
+```mermaid
+flowchart TD
+    Browser[Browser] -- HTTPS --> Caddy[Caddy: TLS, Angular build, reverse proxy]
+    Caddy -- /api --> API[NestJS API]
+    API --> DB[(PostgreSQL + pgvector)]
+    API --> Storage[(MinIO: documents and avatars)]
+    API --> Redis[(Redis: sessions and job queue)]
+    API --> AI[FastAPI AI service]
+    AI --> DB
+    AI --> Redis
+    Redis --> Worker[ARQ ingestion worker]
+    Worker --> Storage
+    Worker --> DB
+    Worker --> Ollama[Ollama: generation and embeddings]
+    AI --> Ollama
+    Worker -. optional .-> OpenRouter[OpenRouter]
+```
 
-| Module | Type | Points | Project application |
-| --- | --- | ---: | --- |
-| RAG system | Major | 2 | Questions over authorized uploaded documents |
-| LLM system interface | Major | 2 | Extraction, summaries, and suggested tasks |
-| Organization system | Major | 2 | Households as organizations |
-| Advanced permissions | Major | 2 | Parent/child roles and configurable sharing |
-| Standard user management | Major | 2 | Profiles, avatars, login, and logout |
-| Frontend and backend frameworks | Major | 2 | Angular and NestJS |
-| File upload system | Minor | 1 | Validated scan/upload workflow with preview and progress |
-| Notification system | Minor | 1 | Payment and deadline reminders |
-| Advanced search | Minor | 1 | Type, date, tag, and tax-year filters |
-| Two-factor authentication | Minor | 1 | Additional account protection |
-| ORM | Minor | 1 | TypeORM persistence |
-| Progressive Web App | Minor | 1 | Mobile installation and offline access |
-| Internationalization: 3+ languages | Minor | 1 | English, German, and Spanish UI |
-| Advanced analytics dashboard | Major | 2 | Expenses, categories, and payments over time |
-| Health checks and backup/disaster recovery | Minor | 1 | System status and recoverable backups |
-| **Total** | | **22** | |
+Caddy is the only entry point. The browser talks HTTPS to Caddy; connections behind it are plain HTTP inside Docker networks. The stack uses three networks: `edge` (Caddy, NestJS, Grafana), `backend` (NestJS, AI service, worker, PostgreSQL, Redis, MinIO, Ollama) and `monitoring` (Prometheus, Grafana, exporters and the two metric targets). Caddy therefore cannot reach the database or the AI service. The AI service is called by NestJS only and expects an API key.
 
-Optional modules, excluded from the total:
+Frontend and API share one origin, so CORS is not enabled. The session cookie is `HttpOnly`, `Secure` and `SameSite=Lax`. Passwords are stored as bcrypt hashes.
 
-| Module | Type | Points | Extension |
-| --- | --- | ---: | --- |
-| Dedicated tax-year analysis / module of choice | Major | 2 | Tax categories, annual export, and missing-receipt detection |
-| WAF/ModSecurity and HashiCorp Vault | Major | 2 | Request filtering and secrets management |
-| Custom design system | Minor | 1 | Reusable application UI components |
-| Data export/import | Minor | 1 | CSV export or migration of existing document collections |
+Two-factor authentication uses time-based one-time passwords (TOTP, RFC 6238). The user scans a QR code in the profile and confirms the setup with a first code. The secret is stored encrypted with AES-256-GCM, the key comes from the environment. At login, a correct password only creates a short-lived challenge in Redis; the session is created after the 6-digit code was verified. Wrong codes count towards the login lockout.
+
+### Document processing
+
+1. An authenticated user with the upload permission sends a file to NestJS. The file type is checked against an allow list by extension and by detected content, the size against `DOCUMENT_MAX_UPLOAD_SIZE_MB`.
+2. NestJS stores the bytes in MinIO and the metadata (uploader, object key, filename, MIME type, size, SHA-256) in PostgreSQL, then calls the AI service.
+3. The AI service creates the analysis record and queues a job. The worker loads the file, extracts the text, detects the language and requests a summary and tags from the model.
+4. The text is split into overlapping chunks. Ollama creates 1,024-dimensional embeddings, which are stored with the chunks and indexed with HNSW.
+5. The status is tracked as `PENDING`, `PROCESSING`, `FINISHED`, `FAILED` or `SKIPPED` and shown in the document list.
+
+For a chat question, the AI service embeds the question, searches the chunks of documents for which the user holds `documents.read` in the document's group, builds the context within a fixed budget and lets the model answer with a confidence score. The answer is stored with its source chunks.
+
+## Database Schema
+
+NestJS owns the application tables through TypeORM migrations. The AI service creates the `ai_*` tables with its own SQL. Sessions, pending two-factor logins and the job queue live in Redis and are not part of the schema.
+
+```mermaid
+erDiagram
+    users ||--o{ user_groups : "is member"
+    groups ||--o{ user_groups : "has members"
+    users ||--o{ user_permission : "holds"
+    groups ||--o{ user_permission : "scoped to"
+    permissions ||--o{ user_permission : "granted"
+    users ||--o{ documents : "uploads"
+    documents ||--o{ document_groups : "assigned"
+    groups ||--o{ document_groups : "contains"
+    documents ||--o{ document_tags : "tagged"
+    tags ||--o{ document_tags : "used"
+    tags ||--o{ tags : "parent of"
+    documents ||--|| ai_documents : "analysed as"
+    ai_documents ||--o{ ai_chunks : "split into"
+    ai_documents ||--o{ ai_document_tags : "suggested"
+    tags ||--o{ ai_document_tags : "existing tag"
+    users ||--o{ ai_conversations : "owns"
+    ai_conversations ||--o{ ai_messages : "contains"
+    ai_messages ||--o{ ai_message_sources : "cites"
+    ai_chunks ||--o{ ai_message_sources : "cited in"
+```
+
+| Table | Key fields | Purpose |
+| --- | --- | --- |
+| `users` | `id` uuid, `email` varchar unique, `password_hash` varchar, `display_name` varchar, `avatar_object_key` varchar, `preferred_language` varchar, `is_active` boolean, `must_change_password` boolean, `totp_secret` varchar, `totp_enabled` boolean, `last_login_at`, `deleted_at` timestamptz | Accounts; deletion is a soft delete and can be reverted |
+| `groups` | `id` uuid, `name` varchar unique, `description` varchar, `is_system` boolean | Organizations (household, club); the system group `admin` holds the administrators |
+| `user_groups` | `user_id`, `group_id` uuid (composite key), `invited_by` uuid, `joined_at` timestamptz | Group membership |
+| `permissions` | `id` uuid, `perm_key` varchar unique, `description` varchar | Available permission keys |
+| `user_permission` | `id` uuid, `user_id`, `group_id`, `permission_id` uuid (unique together) | Permission of one user inside one group |
+| `documents` | `id` uuid, `uploaded_by` uuid, `filename`, `mime_type`, `object_key` varchar, `size_bytes` bigint, `sha256` varchar, `page_count` integer, `reviewed_ai_at`, `deleted_at` timestamptz | File metadata; the bytes are in MinIO |
+| `document_groups` | `document_id`, `group_id` uuid (composite key) | Group a document belongs to |
+| `tags` | `id` uuid, `name` varchar(100) unique, `label` varchar(150), `facet` varchar(16), `parent_id` uuid, `is_system` boolean | Hierarchical tags |
+| `document_tags` | `document_id`, `tag_id` uuid (composite key), `assigned_by` uuid | Confirmed tags of a document |
+| `ai_documents` | `id` uuid (= `documents.id`), `status` varchar(20), `ai_summary` text, `language` varchar(10), `error_key`, `error_detail` text, `retry_count` smallint | Analysis state and result |
+| `ai_chunks` | `id` uuid, `ai_document_id` uuid, `chunk_index` integer, `content` text, `embedding` vector(1024), `page_number` integer | Text chunks with embeddings (HNSW cosine index, trigram index on `content`) |
+| `ai_document_tags` | `id` uuid, `ai_document_id` uuid, `ai_tag_id` uuid or `proposed_name` varchar(100), `confidence` real | Tag suggestions, either an existing tag or a proposal for a new one |
+| `ai_conversations` | `id` uuid, `user_id` uuid, `title` varchar(255) | Chat conversations |
+| `ai_messages` | `id` uuid, `conv_id` uuid, `sender` varchar(10), `content` text | Questions and answers |
+| `ai_message_sources` | `message_id`, `chunk_id` uuid (composite key), `similiary_score` real | Chunks an answer is based on |
+
+## Features List
+
+| Feature | Description | Members |
+| --- | --- | --- |
+| Authentication and sessions | Login, logout, session check, Redis sessions, lockout after failed attempts, forced password change | nluchini, cbauer, poverbec, ghambrec |
+| Two-factor authentication | Setup with QR code in the profile, encrypted secret, code step at login, disable | ghambrec |
+| User administration | Create, edit, soft delete and restore users, reset passwords | poverbec, nluchini, ghambrec |
+| Profile | Display name, language, avatar upload, password change, own groups | poverbec, cbauer |
+| Groups and memberships | Create, edit and delete groups, add and remove members | cbauer, ghambrec |
+| Permissions | Per-user, per-group permissions, guards on the API, permission editor | nluchini, ghambrec, cbauer |
+| Document storage | Upload with validation, MinIO storage, download, preview, rename, move, delete | nluchini, ghambrec |
+| Document views | List with status, upload dialog with progress, preview, detail view | ghambrec |
+| Tags | Tag tree, tag administration, tagging of documents | nluchini, ghambrec |
+| AI ingestion | Queue worker, text extraction and OCR, language detection, summary, tag suggestions, chunking, embeddings | ghambrec, poverbec |
+| Review | Confirm or correct AI tag suggestions, restart failed analyses | ghambrec |
+| Advanced search | Ranked full-text search with snippets, filters, sorting, pagination, trigram indexes | ghambrec |
+| Document chat | Permission-aware retrieval, generation with sources and confidence, conversation history | poverbec, ghambrec |
+| Chat interface | Conversation list, messages, sources, rename and delete | poverbec |
+| Internationalization | English, German and Spanish translations, language stored per user | ghambrec, poverbec |
+| Monitoring | Metrics endpoints, Prometheus, Grafana dashboards, cAdvisor, node-exporter | poverbec |
+| CI and tests | GitHub Actions, end-to-end test stack | nluchini |
+| Deployment | Docker Compose, Caddy with HTTPS, network separation, prod and dev stack | ghambrec |
+
+## Modules
+
+| Module | Type | Points | Implementation | Members |
+| --- | --- | ---: | --- | --- |
+| Framework for frontend and backend | Major | 2 | Angular for the frontend, NestJS for the backend | all |
+| Standard user management and authentication | Major | 2 | Accounts, sessions, profile page, avatar upload, password handling | nluchini, poverbec, cbauer |
+| Advanced permissions system | Major | 2 | Permission keys per user and group, guards on every document route, admin-only views, user administration | nluchini, ghambrec, cbauer |
+| Organization system | Major | 2 | Groups with members; documents, permissions and search are scoped to groups | cbauer, ghambrec |
+| RAG system | Major | 2 | Chunking, embeddings in pgvector, retrieval limited to readable documents, answers with sources | poverbec, ghambrec |
+| LLM system interface | Major | 2 | Structured summaries and tag suggestions during ingestion, chat generation, local or external provider | ghambrec, poverbec |
+| Monitoring with Prometheus and Grafana | Major | 2 | Custom metrics in NestJS and the AI service, exporters, provisioned dashboards, Grafana behind HTTPS | poverbec |
+| ORM | Minor | 1 | TypeORM entities and migrations | nluchini |
+| File upload and management | Minor | 1 | Type and size validation, storage in MinIO, preview, progress, delete | nluchini, ghambrec |
+| Advanced search | Minor | 1 | Filters, sorting, pagination, ranking and highlighting | ghambrec |
+| Multiple languages | Minor | 1 | English, German, Spanish with Transloco | ghambrec, poverbec |
+| Two-factor authentication (2FA) | Minor | 1 | TOTP with authenticator app, setup with QR code in the profile, code step at login | ghambrec |
+| **Total** | | **19** | | |
+
+### Justification per module
+
+We chose these modules because they describe what a document archive for several people needs: accounts, groups with separated access, reliable file handling and a way to find things again. The AI modules are the core idea of the project.
+
+- **Framework for frontend and backend (Major):** The application has many forms, guarded routes and permission-dependent views. Angular provides routing, typed forms and an HTTP client out of the box, and NestJS provides modules, guards and validation pipes that map directly to our permission checks.
+- **Standard user management and authentication (Major):** Every document belongs to a user, so secure sign-up, login, sessions, profile and avatar are the base of everything else. Server-side sessions in Redis can be revoked, which a stateless token cannot do as easily.
+- **Advanced permissions system (Major):** Households and clubs do not want every member to see or change everything. Fine-grained keys (`documents.read`, `upload`, `update`, `delete`) per user and group let an administrator decide exactly who may do what, and the same check protects the AI retrieval.
+- **Organization system (Major):** Groups are how the target users think (family, club, department). Scoping documents, permissions and search to groups gives separated archives inside one installation.
+- **RAG system (Major):** Finding a document is only half of the problem; users want to ask what is in it. Chunking, pgvector embeddings and retrieval limited to readable documents give answers with sources and without leaking other groups' data.
+- **LLM system interface (Major):** The same model interface produces the structured summaries and tag suggestions during ingestion and the chat answers. A switchable provider keeps documents local with Ollama by default and allows an external provider on purpose.
+- **Monitoring with Prometheus and Grafana (Major):** Ingestion and chat run on local models and can be slow. Metrics for both backends and all containers show where time and resources go instead of guessing.
+- **ORM (Minor):** TypeORM entities and migrations keep the schema reproducible for the whole team and for the CI test database.
+- **File upload and management (Minor):** Uploads are the entry point of the product and the main attack surface. Type, content and size validation, MinIO storage, preview and progress make uploads safe and usable.
+- **Advanced search (Minor):** An archive is only useful if documents can be found again. Ranked search over metadata and extracted text, with filters, sorting and pagination, covers the cases that plain tag browsing does not.
+- **Multiple languages (Minor):** Our users and OCR documents are German, English and Spanish, so the interface and the analysis language support need to match.
+- **Two-factor authentication (Minor):** The archive holds contracts, invoices and insurance papers, so a stolen password should not be enough to read them. TOTP works with any authenticator app, needs no SMS or mail service and fits a self-hosted installation.
+
+## Individual Contributions
+
+- **ghambrec:** document frontend (list, upload, preview, detail, review, search, tags), search backend, AI ingestion pipeline (worker, extraction, analysis, chunking, embeddings), review endpoints, two-factor authentication, Docker setup with Caddy, HTTPS and network separation.
+- **nluchini:** NestJS project setup, authentication and session handling, documents module with validation and MinIO storage, tags and permissions backend, TypeORM migrations, GitHub Actions and the end-to-end test environment.
+- **poverbec:** user management backend and frontend, profile page, retrieval and conversation logic in the AI service, chat interface, Prometheus and Grafana monitoring.
+- **cbauer:** groups and group membership in backend and frontend, permission editor, login and profile views.
+
+### Challenges and solutions
+
+- **ghambrec:**
+  - Large PDFs blocked the ingestion pipeline. Text extraction now runs asynchronously, and jobs that time out fail with their own error instead of hanging.
+  - The login page caused a 401 on `/users/me`. A separate `/auth/session` endpoint returns either the current user or `null`.
+  - After logout, data of the previous user could remain in the browser's memory. The app now reloads completely on logout.
+  - Searching many documents needed to stay fast. The search uses trigram and GIN indexes.
+- **nluchini:**
+  - The end-to-end tests were unstable in GitHub Actions. The MinIO service container and the test environment had to be reworked several times until the pipeline ran reliably.
+  - Filtering documents by tag and group needed several iterations of the `findAll` query before it worked together with permissions.
+- **poverbec:**
+  - Retrieval had to respect permissions. The SQL query of the AI service was reworked so that only chunks of readable documents are found.
+  - OCR and PDF extraction needed cleanup and better error handling until scans and photos were extracted reliably.
+  - TypeORM migrations for the system tags needed a correct `down` step that deletes child tags before parent tags.
+- **cbauer:**
+  - The login flow handled a login after another user's session incorrectly. It was fixed so that administrators are recognized correctly.
+  - Saving a profile got stuck and permissions were not reloaded after saving. Both were fixed.
+  - Unit tests broke after the return value of the current-user endpoint changed and were updated.
+
+## Resources
+
+- [NestJS documentation](https://docs.nestjs.com/)
+- [Angular documentation](https://angular.dev/)
+- [TypeORM documentation](https://typeorm.io/)
+- [RFC 6238: TOTP](https://datatracker.ietf.org/doc/html/rfc6238)
+- [FastAPI documentation](https://fastapi.tiangolo.com/)
+- [Pydantic AI documentation](https://ai.pydantic.dev/)
+- [pgvector](https://github.com/pgvector/pgvector)
+- [Ollama documentation](https://docs.ollama.com/)
+- [Caddy documentation](https://caddyserver.com/docs/)
+- [Prometheus documentation](https://prometheus.io/docs/) and [Grafana documentation](https://grafana.com/docs/)
+- [Docker Compose documentation](https://docs.docker.com/compose/)
+
+### Use of AI
+
+AI assistants (Claude, GitHub Copilot) were used throughout the project for these tasks:
+
+- **Learning:** explaining concepts, libraries and standards behind the NestJS backend and the AI service, for example sessions, TypeORM migrations, RAG or TOTP.
+- **Code review and debugging:** reviewing our code in the NestJS backend, the Angular frontend and the AI service, pointing out security problems, and finding the cause of errors.
+- **Software testing:** testing finished features in the running application, for example clicking through the login, profile and document views in the Chrome browser and checking API flows such as the two-factor login against the separate test stack.
+- **Planning and concept:** breaking features into steps, comparing approaches and their trade-offs, and discussing the structure of modules, the data model and the API before implementation
+- **Translations:** drafting the German, English and Spanish interface texts of the Angular frontend.
+- **Documentation:** writing and polishing this README, code comments and the Swagger API descriptions.
+
+The results were read, tested and adapted by the team; every member can explain the code they are responsible for. Inside the product, language models are used for summaries, tag suggestions and chat answers as described above.
 
 ## Repository layout
 
 ```text
-frontend/                 Angular application and translations
+frontend/                 Angular application, translations, and Caddy configuration
 backend/nest-server/      NestJS API, TypeORM migrations, and backend tests
 backend/ai-service/       FastAPI API, ARQ worker, analysis, and vector indexing
 backend/postgres-init/    PostgreSQL extension initialization
-env/                     Environment templates and local/test configuration
-docs/                    Architecture notes, designs, and implementation plans
-docker-compose.yml       Development stack
-docker-compose.test.yml  Backend end-to-end test infrastructure
-Makefile                 Development and test commands
+monitoring/               Prometheus configuration and Grafana dashboards
+env/                      Environment templates and test configuration
+docker-compose.yml        Production stack
+docker-compose.dev.yml    Development override (hot reload, local ports)
+docker-compose.test.yml   Backend end-to-end test infrastructure
+Makefile                  Start, cleanup, and test commands
 ```
-
-Further repository documentation: [MinIO storage](docs/minio-storage.md), [Redis cookie sessions](docs/cookie-sessions-with-redis.md), [persistence design](docs/plan/typeorm-persistence-design.md), and [document data model](docs/plan/ERM_Document.md).

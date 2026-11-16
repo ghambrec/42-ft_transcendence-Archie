@@ -177,8 +177,8 @@ export class DocumentsReviewService {
 			throw new ApplicationException(ErrorCode.DocumentNotFound);
 		}
 
-		// only retry if pipeline didnt start or failed
-		if (document.aiStatus !== 'NOT_STARTED' && document.aiStatus !== 'FAILED') {
+		// only retry if pipeline didnt start, failed or already finished
+		if (document.aiStatus !== 'NOT_STARTED' && document.aiStatus !== 'FAILED' && document.aiStatus !== 'FINISHED') {
 			throw new ApplicationException(ErrorCode.DocumentIngestionNotRetryable);
 		}
 

@@ -1,6 +1,19 @@
-<div class="d-flex vh-100">
-	<app-sidebar />
-	<main class="flex-grow-1 overflow-auto p-4">
+<div class="d-flex flex-column flex-lg-row vh-100" (document:keydown.escape)="sidebarOpen.set(false)">
+	<!-- nur unter lg sichtbar -->
+	<header class="d-flex d-lg-none align-items-center gap-2 px-3 py-2 bg-light border-bottom flex-shrink-0">
+		<button type="button" class="btn btn-outline-secondary" (click)="sidebarOpen.set(!sidebarOpen())"
+			[attr.aria-label]="'sidebar.toggle' | transloco" [attr.aria-expanded]="sidebarOpen()" aria-controls="app-sidebar">
+			<i class="bi bi-list"></i>
+		</button>
+		<img src="images/logo.png" [alt]="'programName' | transloco" height="32">
+	</header>
+
+	@if (sidebarOpen()) {
+	<div class="offcanvas-backdrop show d-lg-none" (click)="sidebarOpen.set(false)"></div>
+	}
+
+	<app-sidebar id="app-sidebar" [class.open]="sidebarOpen()" />
+	<main class="flex-grow-1 overflow-auto p-3 p-lg-4">
 		<router-outlet />
 	</main>
 </div>

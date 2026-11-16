@@ -16,7 +16,12 @@ const CHAT_ERROR_KEYS: Record<string, string> = {
 export function chatErrorKey(error: unknown): string {
   if (error instanceof Error && error.name === 'TimeoutError') return 'ai-chat.error.timeout';
   if (error instanceof HttpErrorResponse) {
-    const code = error.error?.code ?? error.error?.detail?.code;
+    // the streamed ask request is read as text, so its error body is not parsed yet
+    let body = error.error;
+    if (typeof body === 'string') {
+      try { body = JSON.parse(body); } catch { body = null; }
+    }
+    const code = body?.code ?? body?.detail?.code;
     if (typeof code === 'string' && Object.hasOwn(CHAT_ERROR_KEYS, code)) return CHAT_ERROR_KEYS[code];
     if (error.status === 0) return 'ai-chat.error.connectionLost';
     if (error.status === 503 || error.status === 502) return 'ai-chat.error.serviceUnavailable';

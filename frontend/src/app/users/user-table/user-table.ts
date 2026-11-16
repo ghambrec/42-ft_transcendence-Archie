@@ -1,10 +1,11 @@
+import { DatePipe } from '@angular/common';
 import { Component, input, output } from '@angular/core';
 import { TranslocoPipe } from '@jsverse/transloco';
 import type { UserInfo } from '../users';
 
 @Component({
   selector: 'app-user-table',
-  imports: [TranslocoPipe],
+  imports: [DatePipe, TranslocoPipe],
   templateUrl: './user-table.html',
   styles: [':host { display: block; }'],
 })

@@ -38,7 +38,7 @@ export class DocumentsReviewController {
 	@HttpCode(HttpStatus.ACCEPTED)
 	@ApiOperation({
 		summary: 'Retry AI ingestion for a document',
-		description: 'Only allowed if the AI pipeline never started or failed.',
+		description: 'Only allowed if the AI pipeline never started, failed or already finished.',
 	})
 	async retryIngestion(
 		@Req() req: Request,

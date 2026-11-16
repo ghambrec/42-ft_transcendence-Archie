@@ -119,7 +119,7 @@ export const ERROR_CATALOG ={
   },
     [ErrorCode.DocumentIngestionNotRetryable] : {
 	status: HttpStatus.CONFLICT,
-	message: 'Document ingestion is not retryable, only possible if it was not started or has failed'
+	message: 'Document ingestion is not retryable, only possible if it was not started, has failed or is finished'
   },
     [ErrorCode.AiServiceUnavailable] : {
 	status: HttpStatus.SERVICE_UNAVAILABLE,

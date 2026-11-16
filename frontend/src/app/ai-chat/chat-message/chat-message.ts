@@ -1,3 +1,4 @@
+import { PercentPipe } from '@angular/common';
 import { Component, input } from '@angular/core';
 import { TranslocoPipe } from '@jsverse/transloco';
 import type { ChatMessage as ChatMessageData } from '../chat.models';
@@ -6,7 +7,7 @@ import { MarkdownComponent } from 'ngx-markdown';
 
 @Component({
   selector: 'app-chat-message',
-  imports: [TranslocoPipe, ChatSources, MarkdownComponent],
+  imports: [PercentPipe, TranslocoPipe, ChatSources, MarkdownComponent],
   templateUrl: './chat-message.html',
   styleUrl: './chat-message.scss',
 })

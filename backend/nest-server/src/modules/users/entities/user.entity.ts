@@ -40,6 +40,12 @@ export class User {
   @Column({ type: 'boolean', name: 'must_change_password', default: false })
   mustChangePassword!: boolean;
 
+  @Column({ type: 'varchar', name: 'totp_secret', nullable: true })
+  totpSecret!: string | null;
+
+  @Column({ type: 'boolean', name: 'totp_enabled', default: false })
+  totpEnabled!: boolean;
+
   @Column({ type: 'timestamptz', name: 'email_verified_at', nullable: true })
   emailVerifiedAt!: Date | null;
 

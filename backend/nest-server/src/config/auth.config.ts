@@ -1,5 +1,5 @@
 import { registerAs } from "@nestjs/config";
-import { getEnvNumber } from "src/common/env/env";
+import { getEnvNumber, requireEnv } from "src/common/env/env";
 
 
 export default registerAs('auth', () =>{
@@ -12,5 +12,6 @@ export default registerAs('auth', () =>{
 	'AUTH_LOGIN_LOCKOUT_SECONDS',
 	15 * 60,
 	),
+	totpEncryptionKey: requireEnv('TOTP_ENCRYPTION_KEY'),
 
 }})

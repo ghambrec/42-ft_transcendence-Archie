@@ -1,6 +1,17 @@
 {
 	"programName": "Archie",
+	"pageTitle": {
+		"login": "Anmelden",
+		"signup": "Registrieren",
+		"privacy": "Datenschutzerklärung",
+		"terms": "Nutzungsbedingungen",
+		"documents": "Dokumente",
+		"aiChat": "KI-Chat",
+		"profile": "Profil",
+		"settings": "Einstellungen"
+	},
 	"sidebar": {
+		"toggle": "Navigation ein-/ausklappen",
 		"settings": "Einstellungen",
 		"documents": "Dokumente",
 		"dropdown": {
@@ -28,6 +39,41 @@
 			"uploaded": "Hochgeladen",
 			"noDocs": "Keine Dokumente gefunden",
 			"errorLoading": "Dokumente konnten nicht geladen werden"
+		},
+		"search": {
+			"placeholder": "Dokumente durchsuchen …",
+			"type": "Typ",
+			"types": {
+				"pdf": "PDF",
+				"image": "Bild",
+				"text": "Text",
+				"word": "Word",
+				"excel": "Excel/CSV",
+				"archive": "Archiv"
+			},
+			"period": "Zeitraum",
+			"periods": {
+				"any": "Beliebig",
+				"today": "Heute",
+				"7d": "Letzte 7 Tage",
+				"30d": "Letzte 30 Tage",
+				"year": "Dieses Jahr",
+				"lastYear": "Letztes Jahr"
+			},
+			"from": "Von",
+			"to": "Bis",
+			"since": "ab {{ date }}",
+			"until": "bis {{ date }}",
+			"group": "Gruppe",
+			"reset": "Filter zurücksetzen",
+			"tagSuggestions": "Passende Tags:",
+			"source": {
+				"content": "Inhalt",
+				"summary": "Zusammenfassung"
+			},
+			"noResults": "Keine Dokumente für diese Filter gefunden",
+			"noResultsFor": "Keine Treffer für „{{ q }}“",
+			"searchEverywhere": "In allen Dokumenten suchen"
 		},
 		"upload": {
 			"upload": "Dokumente hochladen",
@@ -149,6 +195,8 @@
 		"message": {
 			"label": "Chat-Nachrichten",
 			"sources": "Quellen",
+			"sourceChunks": "Abschnitte",
+			"sourceSimilarity": "Übereinstimmung",
 			"confidenceScore": "Konfidenzwert",
 			"sender": {
 				"user": "Benutzer",
@@ -157,7 +205,8 @@
 		},
 		"hint": {
 			"sending": "Ihre Frage",
-			"ask": "Stellen Sie eine Frage zu Ihren Dokumenten ..."
+			"ask": "Stellen Sie eine Frage zu Ihren Dokumenten ...",
+			"empty": "Kein Chat ausgewählt. Stellen Sie eine Frage, um einen neuen Chat zu starten."
 		},
 		"button": {
 			"send": "Senden",
@@ -196,6 +245,8 @@
 		}
 	},
 	"login": {
+		"signupHint": "Noch kein Konto?",
+		"signupLink": "Jetzt registrieren",
 		"email": "E-Mail",
 		"password": "Passwort",
 		"submit": "Anmelden",
@@ -205,6 +256,17 @@
 			"emailRequired": "E-Mail ist erforderlich.",
 			"emailFormat": "Bitte geben Sie eine gültige E-Mail-Adresse ein.",
 			"passwordRequired": "Passwort ist erforderlich."
+		},
+		"twoFactor": {
+			"code": "Code",
+			"hint": "Geben Sie den 6-stelligen Code aus Ihrer Authenticator-App ein.",
+			"submit": "Bestätigen",
+			"back": "Zurück zur Anmeldung",
+			"errorInvalidCode": "Der Code ist ungültig oder abgelaufen",
+			"errors": {
+				"codeRequired": "Code ist erforderlich.",
+				"codeFormat": "Der Code besteht aus 6 Ziffern."
+			}
 		}
 	},
 	"auth": {
@@ -468,6 +530,20 @@
 			"required": "Geben Sie ein neues Passwort ein.",
 			"maxLength": "Das Passwort darf höchstens 25 Zeichen lang sein.",
 			"pattern": "Verwenden Sie einen Großbuchstaben, einen Kleinbuchstaben, eine Zahl und mindestens ein Zeichen aus !@#$%^&*."
+		},
+		"twoFactor": {
+			"heading": "Zwei-Faktor-Authentifizierung",
+			"description": "Schützen Sie Ihr Konto zusätzlich mit einem Code aus einer Authenticator-App.",
+			"enable": "2FA aktivieren",
+			"scanHint": "Scannen Sie den QR-Code mit Ihrer Authenticator-App und geben Sie den angezeigten Code ein.",
+			"code": "Code",
+			"confirm": "Bestätigen",
+			"active": "Die Zwei-Faktor-Authentifizierung ist aktiv.",
+			"disable": "2FA deaktivieren",
+			"error": "Die Zwei-Faktor-Authentifizierung konnte nicht geändert werden.",
+			"invalidCode": "Der Code ist ungültig.",
+			"codeRequired": "Geben Sie den Code ein.",
+			"codeFormat": "Der Code besteht aus 6 Ziffern."
 		}
 	},
 	"errors": {
@@ -481,7 +557,7 @@
 		"DOCUMENT_NOT_FOUND": "Das Dokument wurde nicht gefunden.",
 		"DOCUMENT_FILENAME_INVALID": "Der Dateiname ist ungültig.",
 		"DOCUMENT_STILL_PROCESSING": "Das Dokument wird noch analysiert.",
-		"DOCUMENT_INGESTION_NOT_RETRYABLE": "Die Analyse kann nur erneut gestartet werden, wenn sie fehlgeschlagen ist oder noch nicht gestartet wurde.",
+		"DOCUMENT_INGESTION_NOT_RETRYABLE": "Die Analyse kann nicht erneut gestartet werden, solange sie läuft oder übersprungen wurde.",
 		"AI_SERVICE_UNAVAILABLE": "Der KI-Dienst ist derzeit nicht verfügbar. Bitte versuchen Sie es später erneut.",
 		"TAG_NOT_FOUND": "Der Tag wurde nicht gefunden.",
 		"FORBIDDEN": "Sie haben keine Berechtigung für diese Aktion."
@@ -497,5 +573,18 @@
 			"timeout": "Die Analyse hat zu lange gedauert und wurde abgebrochen",
 			"unknown": "Bei der Analyse ist ein unbekannter Fehler aufgetreten"
 		}
+	},
+	"signup": {
+		"submit": "Konto erstellen",
+		"errorGeneral": "Registrierung fehlgeschlagen. Bitte versuchen Sie es erneut.",
+		"loginHint": "Schon ein Konto?",
+		"loginLink": "Anmelden"
+	},
+	"legal": {
+		"back": "Zurück",
+		"privacy": "Datenschutzerklärung",
+		"terms": "Nutzungsbedingungen",
+		"privacyText": "Archie ist eine Dokumentenverwaltung, die selbst gehostet wird: Jede Installation wird von ihrem eigenen Betreiber betrieben, zum Beispiel von einem Haushalt oder einem Verein. Für die personenbezogenen Daten ist der Betreiber dieser Installation verantwortlich. Bei Fragen zu deinen Daten wende dich an einen Administrator dieser Installation.\n\n## Welche Daten gespeichert werden\n\n- **Konto:** E-Mail-Adresse, Anzeigename, Passwort (nur als Hash, nie im Klartext), Sprache, Profilbild, Zeitpunkt deines letzten Logins, deine Gruppen und Berechtigungen.\n- **Dokumente:** die hochgeladenen Dateien mit Dateiname, Typ, Größe, Upload-Datum, hochladender Person, Gruppe und Tags.\n- **Analyseergebnisse:** der aus einem Dokument gelesene Text (auch aus Scans und Fotos), eine Zusammenfassung, vorgeschlagene Tags und ein Suchindex über den Text.\n- **Chat:** deine Fragen, die Antworten und die Dokumente, auf denen eine Antwort beruht.\n- **Technische Daten:** deine Sitzung, fehlgeschlagene Anmeldeversuche zu einer E-Mail-Adresse und Server-Logs.\n\n## Warum sie gespeichert werden\n\nDie Daten werden gebraucht, um dir Archie bereitzustellen: um dich anzumelden, Dokumente nur berechtigten Personen zu zeigen, sie zu durchsuchen und Fragen dazu zu beantworten (Art. 6 Abs. 1 lit. b DSGVO). Anmeldeversuche und Logs werden gespeichert, um das System zu schützen und Fehler zu finden (Art. 6 Abs. 1 lit. f DSGVO). Die Daten werden nicht verkauft und nicht für Werbung oder Tracking genutzt.\n\n## KI-Analyse\n\nJedes hochgeladene Dokument wird automatisch analysiert, und der Chat liest für seine Antwort Abschnitte aus Dokumenten, die du lesen darfst. Standardmäßig laufen die Sprachmodelle auf dem Server dieser Installation und die Inhalte bleiben dort. Der Betreiber kann stattdessen einen externen Anbieter (OpenRouter) nutzen. Dann werden Dokumenttext und Chat-Fragen an diesen Anbieter gesendet. Welche Einstellung aktiv ist, kann dir ein Administrator sagen. Es werden keine automatisierten Entscheidungen mit rechtlicher Wirkung über dich getroffen.\n\n## Wo die Daten liegen und wer sie sehen kann\n\nAlle Daten liegen auf dem Server dieser Installation, die Verbindung zu deinem Browser ist verschlüsselt (HTTPS). Andere angemeldete Nutzer können deinen Anzeigenamen und dein Profilbild sehen. Ein Dokument ist für die Mitglieder seiner Gruppe sichtbar, die die Leseberechtigung haben, zusammen mit deinem Namen als hochladende Person. Administratoren verwalten Nutzer, Gruppen, Berechtigungen und Tags. Abgesehen vom optionalen externen Anbieter und den unten beschriebenen Profilbildern werden keine Daten an Dritte weitergegeben.\n\n## Profilbilder\n\nBeim Anlegen eines Kontos erzeugt Archie ein Standard-Profilbild mit dem Dienst [DiceBear](https://www.dicebear.com). Dafür wird dein Anzeigename einmalig an api.dicebear.com gesendet. Das Bild wird danach auf dem Server dieser Installation gespeichert, und du kannst es auf der Profilseite durch ein eigenes ersetzen. Die Bilder verwenden den Stil „Big Smile“, ein Remix von [Custom Avatar](https://www.figma.com/community/file/881358461963645496) von Ashley Seo, lizenziert unter [CC BY 4.0](https://creativecommons.org/licenses/by/4.0/).\n\n## Cookies\n\nArchie setzt ein einziges Cookie. Es hält dich angemeldet, ist technisch notwendig und wird beim Abmelden oder spätestens nach sieben Tagen entfernt. Es gibt keine Tracking-Cookies und keine Cookies von Dritten.\n\n## Wie lange die Daten gespeichert werden\n\nDaten bleiben gespeichert, solange sie für dein Konto gebraucht werden. Chats, die du löschst, werden sofort entfernt. Ein gelöschtes Dokument oder Konto verschwindet aus der Anwendung, wird aber nicht sofort endgültig gelöscht, damit ein Administrator es wiederherstellen kann. Wenn es endgültig gelöscht werden soll, wende dich an einen Administrator. Fehlgeschlagene Anmeldeversuche werden nach kurzer Zeit entfernt.\n\n## Deine Rechte\n\nDeine Profildaten kannst du auf der Profilseite einsehen und ändern. Außerdem hast du das Recht auf Auskunft, Berichtigung, Löschung, Einschränkung der Verarbeitung, Datenübertragbarkeit und Widerspruch. Um diese Rechte zu nutzen, wende dich an einen Administrator dieser Installation. Du kannst dich auch bei einer Datenschutzaufsichtsbehörde beschweren.\n\n*Stand: November 2026*",
+		"termsText": "Diese Bedingungen gelten, wenn du diese Archie-Installation nutzt. Archie ist eine Dokumentenverwaltung, die als Studienprojekt an der 42 Heilbronn entwickelt wurde und vom Betreiber dieser Installation betrieben wird. Mit der Nutzung von Archie stimmst du diesen Bedingungen zu.\n\n## Dein Konto\n\nFür Archie brauchst du ein Konto. Wähle ein sicheres Passwort, halte es geheim und ändere ein Startpasswort bei der ersten Anmeldung. Du bist für alles verantwortlich, was über dein Konto geschieht. Sag einem Administrator Bescheid, wenn du glaubst, dass jemand anderes es benutzt.\n\n## Was nicht erlaubt ist\n\n- Inhalte hochladen, die rechtswidrig sind oder die du nicht speichern oder teilen darfst\n- Schadsoftware oder Dateien hochladen, die dem System schaden sollen\n- versuchen, auf Dokumente, Gruppen oder Konten zuzugreifen, für die du keine Berechtigung hast\n- Sicherheitsmaßnahmen umgehen oder das System mit automatisierten Anfragen überlasten\n\n## Deine Dokumente\n\nAlle Rechte an deinen Dokumenten bleiben bei dir. Mit dem Hochladen bist du einverstanden, dass ein Dokument gespeichert, automatisch analysiert und den Mitgliedern seiner Gruppe mit Leseberechtigung angezeigt wird. Lade Dokumente mit personenbezogenen Daten anderer Personen nur hoch, wenn du sie mit dieser Gruppe teilen darfst.\n\n## KI-Ergebnisse\n\nZusammenfassungen, vorgeschlagene Tags und Chat-Antworten werden von Sprachmodellen erzeugt. Sie können falsch oder unvollständig sein, auch wenn ein Konfidenzwert oder Quellen angezeigt werden. Prüfe das Originaldokument, bevor du dich darauf verlässt. Sie sind keine Rechts-, Steuer-, Finanz- oder medizinische Beratung.\n\n## Administratoren\n\nAdministratoren entscheiden, wer in einer Gruppe Dokumente lesen, hochladen, ändern oder löschen darf. Sie können Berechtigungen ändern, Mitglieder entfernen und Konten deaktivieren, zum Beispiel bei Verstößen gegen diese Bedingungen.\n\n## Verfügbarkeit und Haftung\n\nArchie ist ein nicht kommerzielles Studienprojekt und wird so bereitgestellt, wie es ist, ohne Garantie, dass es immer erreichbar oder fehlerfrei ist. Es ersetzt kein Backup, bewahre also eigene Kopien wichtiger Dokumente auf. Soweit gesetzlich zulässig, haften die Entwickler und der Betreiber nicht für Datenverlust, falsche KI-Ergebnisse oder andere Schäden durch die Nutzung der Software.\n\n## Änderungen\n\nDiese Bedingungen können sich ändern, wenn sich die Software ändert. Die aktuelle Fassung steht immer auf dieser Seite. Wie mit deinen personenbezogenen Daten umgegangen wird, steht in der Datenschutzerklärung.\n\n*Stand: November 2026*"
 	}
 }

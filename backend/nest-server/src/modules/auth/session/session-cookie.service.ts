@@ -19,7 +19,7 @@ export class SessionCookieService {
   set(res: Response, sessionId: string): void {
     res.cookie(this.cookieName, sessionId, {
       httpOnly: true,
-      // secure: process.env.NODE_ENV === 'production',
+      secure: true,
       sameSite: 'lax',
       maxAge: this.ttlSeconds * 1000,
     });

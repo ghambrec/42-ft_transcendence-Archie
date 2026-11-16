@@ -9,7 +9,7 @@
     </button>
   </div>
 }
-<ul class="nav nav-pills flex-column gap-1">
+<ul class="nav nav-pills flex-column flex-nowrap gap-1">
   @for (conversation of conversations(); track conversation.id) {
     <li class="nav-item d-flex align-items-center">
       <a class="nav-link text-truncate flex-grow-1 chat-link" [class.disabled]="busy()"
@@ -20,7 +20,7 @@
         <i class="bi bi-chat-left-text me-2" aria-hidden="true"></i>
         {{ conversation.title || ('ai-chat.history.untitled' | transloco) }}
       </a>
-      <div ngbDropdown container="body" placement="bottom-end" class="flex-shrink-0">
+      <div ngbDropdown container="body" placement="bottom-end top-end" class="flex-shrink-0">
         <button type="button" class="btn btn-sm chat-menu-toggle" ngbDropdownToggle
           [id]="'chat-menu-' + conversation.id"
           [disabled]="busy()"

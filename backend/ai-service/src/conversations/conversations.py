@@ -40,9 +40,13 @@ async def ask_question(pool: asyncpg.Pool, user_id: UUID, conv_id: UUID, questio
                 "INSERT INTO ai_messages (conv_id, sender, content) VALUES ($1, 'user', $2)",
                 conv_id, question,
             )
-            answer = await retrieval(user_id, conv_id, question, connection)
+            # stream the answer text, the last item is the full answer for saving
+            async for item in retrieval(user_id, conv_id, question, connection):
+                if isinstance(item, str):
+                    yield item
+                else:
+                    answer = item
             await save_conversation(connection, question, answer, conv_id)
-            return answer
         finally:
             await connection.execute(
                 "SELECT pg_advisory_unlock(hashtextextended($1, 0))", lock_key
