@@ -104,7 +104,22 @@ CREATE TABLE IF NOT EXISTS ai_notification_reminders (
 	next_attempt_at timestamptz
 );
 
+BEGIN
+    IF EXISTS (
+        SELECT 1 FROM information_schema.columns
+        WHERE table_schema = current_schema()
+          AND table_name = 'ai_notification_reminders' AND column_name = 'retry_date'
+    ) AND NOT EXISTS (
+        SELECT 1 FROM information_schema.columns
+        WHERE table_schema = current_schema()
+          AND table_name = 'ai_notification_reminders' AND column_name = 'next_attempt_at'
+    ) THEN
+        ALTER TABLE ai_notification_reminders RENAME COLUMN retry_date TO next_attempt_at;
+    END IF;
+END
+
 ALTER TABLE ai_notification_reminders
+    ADD COLUMN IF NOT EXISTS next_attempt_at TIMESTAMPTZ,
     ADD COLUMN IF NOT EXISTS skipped_at TIMESTAMPTZ;
 
 CREATE Index if not exists ai_notifications_document_id_idx
