@@ -1,4 +1,5 @@
 from uuid import UUID
+import json
 
 import asyncpg 
 
@@ -66,22 +67,41 @@ async def list_notifications(
     document_id: UUID | None = None,
     limit: int = 20,
     offset: int = 0,
-) -> list[asyncpg.Record]:
-	
-	return await pool.fetch(
-		f"""
+) -> list[dict[str, object]]:
+    rows = await pool.fetch(
+        f"""
         WITH {DOCUMENT_ACCESS_CTE}
         SELECT
             n.id,
             n.document_id,
+            d.filename AS document_name,
             n.source,
             n.title,
             n.message,
             n.due_date,
             n.created_by,
             n.created_at,
-            n.updated_at
+            n.updated_at,
+            COALESCE((
+                SELECT jsonb_agg(jsonb_build_object(
+                    'id', r.id,
+                    'remind_at', r.remind_at,
+                    'sent_at', r.sent_at,
+                    'skipped_at', r.skipped_at,
+                    'next_attempt_at', r.next_attempt_at,
+                    'error_key', r.error_key,
+                    'status', CASE
+                        WHEN r.sent_at IS NOT NULL THEN 'sent'
+                        WHEN r.skipped_at IS NOT NULL THEN 'skipped'
+                        WHEN r.error_key IS NOT NULL THEN 'failed'
+                        ELSE 'scheduled'
+                    END
+                ) ORDER BY r.remind_at, r.id)
+                FROM ai_notification_reminders AS r
+                WHERE r.ai_notification_id = n.id
+            ), '[]'::jsonb) AS reminders
         FROM ai_notifications AS n
+        JOIN documents AS d ON d.id = n.document_id
 		Where exists (
 			Select 1
 			From document_access as access
@@ -98,4 +118,6 @@ async def list_notifications(
         limit,
         offset,
 
-	)
+    )
+    # asyncpg returns JSONB as text unless a custom codec is registered.
+    return [{**dict(row), "reminders": json.loads(row["reminders"])} for row in rows]

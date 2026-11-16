@@ -61,12 +61,38 @@ export class CreatedNotificationDto {
   reminder_id!: string;
 }
 
+export class NotificationReminderDto {
+  @ApiProperty({ format: 'uuid' })
+  id!: string;
+
+  @ApiProperty({ format: 'date-time' })
+  remind_at!: string;
+
+  @ApiProperty({ enum: ['scheduled', 'sent', 'skipped', 'failed'] })
+  status!: 'scheduled' | 'sent' | 'skipped' | 'failed';
+
+  @ApiProperty({ type: String, format: 'date-time', nullable: true })
+  sent_at!: string | null;
+
+  @ApiProperty({ type: String, format: 'date-time', nullable: true })
+  skipped_at!: string | null;
+
+  @ApiProperty({ type: String, format: 'date-time', nullable: true })
+  next_attempt_at!: string | null;
+
+  @ApiProperty({ type: String, nullable: true, description: 'Sanitized error category; no SMTP details' })
+  error_key!: string | null;
+}
+
 export class NotificationDto {
   @ApiProperty({ format: 'uuid' })
   id!: string;
 
   @ApiProperty({ format: 'uuid' })
   document_id!: string;
+
+  @ApiProperty()
+  document_name!: string;
 
   @ApiProperty({ enum: ['ai', 'manual'] })
   source!: 'ai' | 'manual';
@@ -88,6 +114,9 @@ export class NotificationDto {
 
   @ApiProperty({ format: 'date-time' })
   updated_at!: string;
+
+  @ApiProperty({ type: [NotificationReminderDto] })
+  reminders!: NotificationReminderDto[];
 }
 
 export class NotificationListDto {
@@ -99,4 +128,7 @@ export class NotificationListDto {
 
   @ApiProperty()
   offset!: number;
+
+  @ApiProperty({ description: 'Another page of visible notifications exists' })
+  has_more!: boolean;
 }

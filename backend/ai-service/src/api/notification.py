@@ -63,14 +63,15 @@ async def list_notifications(
         pool=request.app.state.db_pool,
         user_id=user_id,
         document_id=document_id,
-        limit=limit,
+        limit=limit + 1,
         offset=offset,
     )
     
     return {
-        "data": [dict(row) for row in rows],
+        "data": rows[:limit],
         "limit": limit,
         "offset": offset,
+        "has_more": len(rows) > limit,
     }
 
 class QueuedReminderDelivery(BaseModel):
