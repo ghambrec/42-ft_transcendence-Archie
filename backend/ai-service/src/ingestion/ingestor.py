@@ -18,6 +18,7 @@ from src.ingestion.language import detect_language
 from src.generation.analyzer import analyze_doc
 from src.generation.analyzer import DocumentInfos
 from src.ingestion.extraction import extract_text, UnsupportedFileTypeError, NoTextExtracedError
+from src.notifications.scheduling import default_reminder_time, today_in_berlin
 
 logger = logging.getLogger(__name__)
 
@@ -40,29 +41,44 @@ async def get_tags(pool: asyncpg.Pool) -> list[dict]:
 
 
 async def write_llm_data(pool: asyncpg.Pool, doc_id: UUID, data: DocumentInfos, existing_tags: list[dict]) -> None:
-    # SUMMARY
-    update_summary = "update ai_documents set ai_summary = $2 where id = $1"
-    await pool.execute(update_summary, doc_id, data.summary)
+    today = today_in_berlin()
+    async with pool.acquire() as connection:
+        async with connection.transaction():
+            # Serialize analyses of the same document and commit all analysis data together.
+            if not await connection.fetchval("SELECT id FROM ai_documents WHERE id=$1 FOR UPDATE", doc_id):
+                raise ValueError(f"No AI document entry for {doc_id}")
+            await connection.execute("UPDATE ai_documents SET ai_summary=$2 WHERE id=$1", doc_id, data.summary)
+            await connection.execute("DELETE FROM ai_document_tags WHERE ai_document_id=$1", doc_id)
+            lookup_map = {tag["name"].strip().lower(): tag["id"] for tag in existing_tags}
+            for ai_tag in data.tags:
+                tag_id = lookup_map.get(ai_tag.name.strip().lower())
+                if tag_id is None:
+                    parent_id = lookup_map.get(ai_tag.parent.strip().lower()) if ai_tag.parent else None
+                    await connection.execute(
+                        """INSERT INTO ai_document_tags
+                        (ai_document_id,proposed_name,proposed_facet,proposed_description,proposed_parent_id,confidence)
+                        VALUES($1,$2,$3,$4,$5,$6)""",
+                        doc_id, ai_tag.name, ai_tag.facet, ai_tag.description, parent_id, ai_tag.confidence,
+                    )
+                else:
+                    await connection.execute(
+                        "INSERT INTO ai_document_tags(ai_document_id,ai_tag_id,confidence) VALUES($1,$2,$3)",
+                        doc_id, tag_id, ai_tag.confidence,
+                    )
 
-    # TAGS
-    await pool.execute("delete from ai_document_tags where ai_document_id = $1", doc_id)
-    lookup_map = {tag["name"].strip().lower(): tag["id"] for tag in existing_tags}
-    for ai_tag in data.tags:
-        name = ai_tag.name.strip().lower()
-        tag_id = lookup_map.get(name)
-
-        if tag_id is None:
-            # tag not exist, insert into proposed_ fields
-            parent_id = lookup_map.get(ai_tag.parent.strip().lower()) if ai_tag.parent else None
-            insert_proposed_tag = """
-                                    insert into ai_document_tags (ai_document_id, proposed_name, proposed_facet, proposed_description, proposed_parent_id, confidence)
-                                    values ($1, $2, $3, $4, $5, $6)
-                                """
-            await pool.execute(insert_proposed_tag, doc_id, ai_tag.name, ai_tag.facet, ai_tag.description, parent_id, ai_tag.confidence)
-        else:
-            # tag exist, write as normal tag
-            insert_doc_tag = "insert into ai_document_tags (ai_document_id, ai_tag_id, confidence) values ($1, $2, $3)"
-            await pool.execute(insert_doc_tag, doc_id, tag_id, ai_tag.confidence)
+            await connection.execute("DELETE FROM ai_notifications WHERE document_id=$1 AND source='ai'", doc_id)
+            for reminder in data.reminders:
+                if reminder.due_date < today:
+                    continue
+                notification_id = await connection.fetchval(
+                    """INSERT INTO ai_notifications(document_id,source,title,message,due_date)
+                    VALUES($1,'ai',$2,$3,$4) RETURNING id""",
+                    doc_id, reminder.title, reminder.message, reminder.due_date,
+                )
+                await connection.execute(
+                    "INSERT INTO ai_notification_reminders(ai_notification_id,remind_at) VALUES($1,$2)",
+                    notification_id, default_reminder_time(reminder.due_date),
+                )
 
 
 async def ingest_doc(
@@ -103,7 +119,6 @@ async def ingest_doc(
         await status.mark_as_finished(pool, doc_id, language)
         logger.info("ingestion finished for doc: %s", doc_id)
 
-    # SKIP AI PIPELINE
     except UnsupportedFileTypeError as e:
         logger.info("skipping ai processing for doc %s: unsupported mime type %s", doc_id, e.mime_type)
         await status.mark_as_skipped(pool, doc_id, "unsupported_mime_type", str(e))
