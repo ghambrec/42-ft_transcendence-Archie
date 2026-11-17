@@ -1,5 +1,10 @@
 <div class="mb-3">
   <label [for]="inputId()" class="form-label">{{ labelKey() | transloco }}</label>
+  @if (type() === 'textarea') {
+    <textarea [id]="inputId()" class="form-control" rows="4" [formField]="field()"
+      [class.is-invalid]="showError()" [attr.aria-invalid]="showError() ? 'true' : null"
+      [attr.aria-describedby]="describedBy()"></textarea>
+  } @else {
   <input
     [id]="inputId()"
     [type]="type()"
@@ -9,6 +14,7 @@
     [class.is-invalid]="showError()"
     [attr.aria-invalid]="showError() ? 'true' : null"
     [attr.aria-describedby]="describedBy()" />
+  }
   @if (showError()) {
     @if (errorKey(); as key) {
       <div class="invalid-feedback" [id]="inputId() + '-error'">{{ key | transloco }}</div>

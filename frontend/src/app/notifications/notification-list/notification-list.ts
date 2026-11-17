@@ -33,6 +33,11 @@ export class NotificationList {
   protected readonly page = computed(() => this.resource.hasValue() ? this.resource.value() : EMPTY_PAGE);
   protected readonly pageNumber = computed(() => this.offset() / PAGE_SIZE + 1);
 
+  reload() {
+    if (this.offset() === 0) this.resource.reload();
+    else this.offset.set(0);
+  }
+
   protected nextPage() {
     if (!this.resource.isLoading() && this.page().has_more) {
       this.offset.update(offset => offset + PAGE_SIZE);

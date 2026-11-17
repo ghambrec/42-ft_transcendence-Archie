@@ -119,10 +119,7 @@
 					</div>
 				</section>
 
-				<section>
-					<h3 class="section-title">{{ 'notifications.title' | transloco }}</h3>
-					<app-notification-list [documentId]="doc.id" [showDocumentLinks]="false" />
-				</section>
+				<app-document-notifications [document]="doc" />
 
 				<!-- infos -->
 				<section>

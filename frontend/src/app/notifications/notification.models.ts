@@ -30,3 +30,13 @@ export interface NotificationPage {
   offset: number;
   has_more: boolean;
 }
+
+export interface CreateNotificationRequest {
+  document_id: string;
+  title: string;
+  message: string;
+  due_date: string;
+  remind_at: string;
+}
+
+export interface CreatedNotification { id: string; reminder_id: string; }
