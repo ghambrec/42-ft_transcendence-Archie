@@ -1,0 +1,11 @@
+groups:
+  - name: availability
+    rules:
+      - alert: ServiceDown
+        expr: up == 0
+        for: 1m
+        labels:
+          severity: warning
+        annotations:
+          summary: "Target {{ $labels.job }} is unreachable"
+          description: "Prometheus cannot scrape {{ $labels.instance }} for at least one minute."
