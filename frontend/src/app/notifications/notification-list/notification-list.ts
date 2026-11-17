@@ -1,8 +1,8 @@
 import { httpResource } from '@angular/common/http';
-import { Component, computed, input, linkedSignal } from '@angular/core';
+import { Component, computed, input, linkedSignal, output } from '@angular/core';
 import { TranslocoPipe } from '@jsverse/transloco';
 import { environment } from '../../../environments/environment';
-import type { NotificationPage } from '../notification.models';
+import type { NotificationPage, DocumentNotification } from '../notification.models';
 import { NotificationCard } from '../notification-card/notification-card';
 import { PageNavigation } from '../../shared/page-navigation/page-navigation';
 
@@ -18,6 +18,9 @@ const EMPTY_PAGE: NotificationPage = { data: [], limit: PAGE_SIZE, offset: 0, ha
 export class NotificationList {
   readonly documentId = input<string | null>(null);
   readonly showDocumentLinks = input(true);
+  readonly canManage = input(false);
+  readonly edit = output<DocumentNotification>();
+  readonly remove = output<DocumentNotification>();
 
   protected readonly offset = linkedSignal({ source: this.documentId, computation: () => 0 });
   protected readonly resource = httpResource<NotificationPage>(() => ({

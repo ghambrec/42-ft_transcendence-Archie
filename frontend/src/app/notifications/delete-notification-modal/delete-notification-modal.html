@@ -1,0 +1,18 @@
+<div class="modal-header">
+  <h2 class="modal-title fs-5" id="delete-notification-title">{{ 'notifications.delete.heading' | transloco }}</h2>
+  <button type="button" class="btn-close" [attr.aria-label]="'notifications.create.cancel' | transloco"
+    [disabled]="submitting()" (click)="activeModal.dismiss()"></button>
+</div>
+<div class="modal-body">
+  <p class="fw-semibold text-break">{{ notification()?.title }}</p>
+  <p>{{ 'notifications.delete.description' | transloco }}</p>
+  @if (error(); as key) {
+    <div class="alert alert-danger" role="alert">{{ key | transloco }}</div>
+  }
+</div>
+<div class="modal-footer">
+  <button type="button" class="btn btn-secondary" [disabled]="submitting()" (click)="activeModal.dismiss()">{{ 'notifications.create.cancel' | transloco }}</button>
+  <button type="button" class="btn btn-danger" data-testid="confirm-delete" [disabled]="submitting()" (click)="confirm()">
+    {{ (submitting() ? 'notifications.delete.pending' : 'notifications.delete.submit') | transloco }}
+  </button>
+</div>

@@ -17,5 +17,11 @@
     </p>
     <h4 class="small fw-semibold">{{ 'notifications.reminders' | transloco }}</h4>
     <app-reminder-list [reminders]="item.reminders" />
+    @if (canManage()) {
+      <div class="d-flex gap-2 mt-3">
+        <button type="button" class="btn btn-sm btn-outline-primary" data-testid="edit-notification" (click)="edit.emit(item)">{{ 'notifications.edit.heading' | transloco }}</button>
+        <button type="button" class="btn btn-sm btn-outline-danger" data-testid="delete-notification" (click)="remove.emit(item)">{{ 'notifications.delete.heading' | transloco }}</button>
+      </div>
+    }
   </div>
 </article>

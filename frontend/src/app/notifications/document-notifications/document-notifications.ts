@@ -7,6 +7,8 @@ import type { DocumentSummary } from '../../documents/documents';
 import { Users } from '../../users/users';
 import { NotificationList } from '../notification-list/notification-list';
 import { CreateNotificationModal } from '../create-notification-modal/create-notification-modal';
+import { DeleteNotificationModal } from '../delete-notification-modal/delete-notification-modal';
+import type { DocumentNotification } from '../notification.models';
 
 @Component({
   selector: 'app-document-notifications',
@@ -29,17 +31,34 @@ export class DocumentNotifications {
     return this.memberships.value().groups.some(membership =>
       membership.permissions.includes('notifications.manage') && groups.some(group => group.id === membership.groupId));
   });
-  private readonly untilDestroyed = takeUntilDestroyed();
+  private readonly untilDestroyed = takeUntilDestroyed<boolean>();
 
-  protected openCreate() {
+  protected openCreate(notification?: DocumentNotification) {
     if (!this.canManage() || this.dialogOpen()) return;
     const { id, filename } = this.document();
+    if (notification && notification.document_id !== id) return;
     let modal: NgbModalRef;
     modal = this.modals.open(CreateNotificationModal, {
       centered: true, size: 'lg', ariaLabelledBy: 'create-notification-title',
       beforeDismiss: () => !modal.componentInstance.notificationForm().submitting(),
     });
-    modal.componentInstance.document.set({ id, filename });
+    if (notification) modal.componentInstance.edit(notification);
+    else modal.componentInstance.document.set({ id, filename });
+    this.watchModal(modal, id);
+  }
+
+  protected openDelete(notification: DocumentNotification) {
+    if (!this.canManage() || this.dialogOpen() || notification.document_id !== this.document().id) return;
+    let modal: NgbModalRef;
+    modal = this.modals.open(DeleteNotificationModal, {
+      centered: true, ariaLabelledBy: 'delete-notification-title',
+      beforeDismiss: () => !modal.componentInstance.submitting(),
+    });
+    modal.componentInstance.notification.set({ id: notification.id, title: notification.title });
+    this.watchModal(modal, this.document().id);
+  }
+
+  private watchModal(modal: NgbModalRef, id: string) {
     this.dialogOpen.set(true);
     merge(modal.closed.pipe(map(() => true)), modal.dismissed.pipe(map(() => false)))
       .pipe(take(1), this.untilDestroyed)

@@ -18,7 +18,8 @@
 } @else {
   <div class="notification-grid">
     @for (notification of page().data; track notification.id) {
-      <app-notification-card [notification]="notification" [showDocumentLink]="showDocumentLinks()" />
+      <app-notification-card [notification]="notification" [showDocumentLink]="showDocumentLinks()"
+        [canManage]="canManage()" (edit)="edit.emit($event)" (remove)="remove.emit($event)" />
     } @empty {
       <p class="text-secondary py-3 mb-0">{{ (documentId() ? 'notifications.emptyDocument' : 'notifications.empty') | transloco }}</p>
     }

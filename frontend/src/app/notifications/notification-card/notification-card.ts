@@ -1,5 +1,5 @@
 import { DatePipe } from '@angular/common';
-import { Component, input } from '@angular/core';
+import { Component, input, output } from '@angular/core';
 import { RouterLink } from '@angular/router';
 import { TranslocoPipe } from '@jsverse/transloco';
 import type { DocumentNotification } from '../notification.models';
@@ -14,4 +14,7 @@ import { ReminderList } from '../reminder-list/reminder-list';
 export class NotificationCard {
   readonly notification = input.required<DocumentNotification>();
   readonly showDocumentLink = input(true);
+  readonly canManage = input(false);
+  readonly edit = output<DocumentNotification>();
+  readonly remove = output<DocumentNotification>();
 }

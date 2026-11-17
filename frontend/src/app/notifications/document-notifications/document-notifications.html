@@ -14,5 +14,6 @@
       <button type="button" class="btn btn-sm btn-link" (click)="memberships.reload()">{{ 'notifications.retry' | transloco }}</button>
     </div>
   }
-  <app-notification-list #list [documentId]="document().id" [showDocumentLinks]="false" />
+  <app-notification-list #list [documentId]="document().id" [showDocumentLinks]="false"
+    [canManage]="canManage()" (edit)="openCreate($event)" (remove)="openDelete($event)" />
 </section>
