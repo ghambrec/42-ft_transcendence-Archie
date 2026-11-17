@@ -1,0 +1,11 @@
+<nav class="d-flex justify-content-between align-items-center gap-2" [attr.aria-label]="'pagination.label' | transloco">
+  <button type="button" data-testid="previous" class="btn btn-sm btn-outline-secondary"
+    (click)="previous.emit()" [disabled]="disabled() || !hasPrevious()">
+    {{ 'pagination.previous' | transloco }}
+  </button>
+  <span class="small text-secondary">{{ 'pagination.page' | transloco }} {{ page() }}</span>
+  <button type="button" data-testid="next" class="btn btn-sm btn-outline-secondary"
+    (click)="next.emit()" [disabled]="disabled() || !hasNext()">
+    {{ 'pagination.next' | transloco }}
+  </button>
+</nav>
