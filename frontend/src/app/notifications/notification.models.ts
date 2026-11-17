@@ -40,3 +40,5 @@ export interface CreateNotificationRequest {
 }
 
 export interface CreatedNotification { id: string; reminder_id: string; }
+
+export type UpdateNotificationRequest = Partial<Omit<CreateNotificationRequest, 'document_id'>>;
