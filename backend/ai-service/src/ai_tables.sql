@@ -104,6 +104,7 @@ CREATE TABLE IF NOT EXISTS ai_notification_reminders (
 	next_attempt_at timestamptz
 );
 
+DO $$
 BEGIN
     IF EXISTS (
         SELECT 1 FROM information_schema.columns
@@ -116,7 +117,8 @@ BEGIN
     ) THEN
         ALTER TABLE ai_notification_reminders RENAME COLUMN retry_date TO next_attempt_at;
     END IF;
-END
+END;
+$$;
 
 ALTER TABLE ai_notification_reminders
     ADD COLUMN IF NOT EXISTS next_attempt_at TIMESTAMPTZ,
