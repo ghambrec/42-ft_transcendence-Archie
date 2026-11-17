@@ -80,6 +80,8 @@
 			"selectGroupTooltip": "Seleccionar el grupo para la subida",
 			"maxSize": "máx. {{ size }} MB por archivo",
 			"errors": {
+		"AVATAR_FILE_TOO_LARGE": "La foto de perfil no debe superar los 5 MB.",
+		"INVALID_AVATAR_FILE_TYPE": "Elige una imagen JPG, PNG o WebP válida.",
 				"empty": "El archivo está vacío",
 				"tooBig": "El archivo es demasiado grande",
 				"filetypeNotAllowed": "Este tipo de archivo no está permitido",
@@ -478,6 +480,17 @@
 		}
 	},
 	"profile": {
+		"avatar": {
+			"heading": "Foto de perfil",
+			"imageAlt": "Tu foto de perfil",
+			"choose": "Elegir imagen",
+			"hint": "JPG, PNG o WebP, máximo 5 MB.",
+			"upload": "Guardar foto de perfil",
+			"uploading": "Subiendo…",
+			"cancel": "Cancelar",
+			"saved": "Foto de perfil guardada.",
+			"error": "No se pudo guardar la foto de perfil. Inténtalo de nuevo."
+		},
 		"heading": "Perfil",
 		"description": "Gestione la configuración de su cuenta personal.",
 		"active": "Activo",

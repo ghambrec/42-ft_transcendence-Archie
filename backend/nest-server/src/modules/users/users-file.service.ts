@@ -1,4 +1,4 @@
-import { Injectable } from '@nestjs/common';
+import { Injectable, Logger } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 import { randomUUID } from 'crypto';
@@ -18,6 +18,7 @@ const MIME_TYPE_KEY = 'content-type';
 
 @Injectable()
 export class UsersFileService {
+  private readonly logger = new Logger(UsersFileService.name);
   constructor(
     @InjectRepository(User)
     private readonly usersRepository: Repository<User>,
@@ -80,7 +81,11 @@ export class UsersFileService {
     await this.usersRepository.update(userId, { avatarObjectKey: key });
 
     if (previousObjectKey) {
-      await this.storageService.removeObject(AVATARS_BUCKET, previousObjectKey);
+      try {
+        await this.storageService.removeObject(AVATARS_BUCKET, previousObjectKey);
+      } catch {
+        this.logger.warn('Previous avatar could not be removed after a successful replacement');
+      }
     }
 
     return { objectAvatarKey: key };
