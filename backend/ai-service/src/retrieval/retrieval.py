@@ -4,6 +4,7 @@ from src.embedding.embedder import embed
 from pgvector import Vector
 from src.generation.generator import generate
 from src.generation.schemas import AnswerResponse, GeneratedAnswer, SourceCitation
+from src.document_access import DOCUMENT_ACCESS_CTE
 
 
 from uuid import UUID
@@ -70,7 +71,8 @@ async def search_chunks(pool: asyncpg.Pool | asyncpg.Connection,
                         question_embedding: list[asyncpg.Record], 
 						limit:int) ->list[asyncpg.Record]:
 
-	query = """
+	query = f"""
+				WITH {DOCUMENT_ACCESS_CTE}
 				select 
 					ac.ai_document_id,
 					ac.id,
@@ -81,22 +83,11 @@ async def search_chunks(pool: asyncpg.Pool | asyncpg.Connection,
 				from ai_chunks ac
 				join documents d on 
 					d.id = ac.ai_document_id
-				where ac.ai_document_id in (
-					select
-						distinct d.id 
-					from documents d 
-					inner join document_groups dg on 
-						d.id = dg.document_id 
-					inner join user_groups ug on 
-						ug.group_id = dg.group_id 
-					inner join user_permission up on 
-						up.user_id = ug.user_id AND up.group_id = dg.group_id
-					inner join permissions p on 
-						up.permission_id = p.id 
-					where
-						d.deleted_at is null
-						and p.perm_key = 'documents.read'
-						and ug.user_id = $2
+				where exists (
+					SELECT 1 FROM document_access AS access
+					WHERE access.document_id = ac.ai_document_id
+					  AND access.user_id = $2
+					  AND access.perm_key = 'documents.read'
 				)
 				order by ac.embedding <=> $1
 				limit $3

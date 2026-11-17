@@ -7,6 +7,7 @@ from asyncpg.exceptions import ForeignKeyViolationError
 
 from src.generation.schemas import AnswerResponse, SourceCitation
 from src.conversations.errors import ChatError
+from src.document_access import DOCUMENT_ACCESS_CTE
 
 from uuid import UUID
 
@@ -75,7 +76,8 @@ async def get_messages(pool: asyncpg.Pool, user_id: UUID, conv_id: UUID):
 
     # Re-check current document access when a saved conversation is reopened.
     source_rows = await pool.fetch(
-        """
+        f"""
+        WITH {DOCUMENT_ACCESS_CTE}
         SELECT ams.message_id, ch.id AS chunk_id,
                d.id AS document_id, d.filename AS document_name,
                ams.similiary_score AS similarity_score
@@ -85,16 +87,10 @@ async def get_messages(pool: asyncpg.Pool, user_id: UUID, conv_id: UUID):
         JOIN ai_chunks AS ch ON ch.id = ams.chunk_id
         JOIN documents AS d ON d.id = ch.ai_document_id
         WHERE am.conv_id = $1 AND ac.user_id = $2
-          AND d.deleted_at IS NULL
           AND EXISTS (
-              SELECT 1
-              FROM document_groups AS dg
-              JOIN user_groups AS ug ON ug.group_id = dg.group_id
-              JOIN user_permission AS up
-                ON up.user_id = ug.user_id AND up.group_id = dg.group_id
-              JOIN permissions AS p ON p.id = up.permission_id
-              WHERE dg.document_id = d.id AND ug.user_id = $2
-                AND p.perm_key = 'documents.read'
+              SELECT 1 FROM document_access AS access
+              WHERE access.document_id = d.id AND access.user_id = $2
+                AND access.perm_key = 'documents.read'
           )
         ORDER BY ams.message_id, d.filename, ch.id
         """,
