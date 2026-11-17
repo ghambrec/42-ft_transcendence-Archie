@@ -1,6 +1,7 @@
 {
 	"pagination": { "label": "Seitennavigation", "previous": "Zurück", "next": "Weiter", "page": "Seite" },
 	"notifications": {
+		"create": {"heading": "Erinnerung erstellen", "title": "Titel", "message": "Nachricht", "remindAt": "Erinnern am", "localTimeHint": "Die Eingabe gilt in deiner lokalen Zeitzone. Die Erinnerung ist gemeinsam für berechtigte Empfänger mit aktivierten Benachrichtigungen.", "cancel": "Abbrechen", "submit": "Erstellen", "pending": "Wird erstellt…", "required": "Bitte fülle dieses Feld aus.", "titleTooLong": "Der Titel darf höchstens 255 Zeichen enthalten.", "invalidDate": "Bitte gib ein gültiges Datum und eine gültige lokale Uhrzeit ein.", "failed": "Die Erinnerung konnte nicht erstellt werden. Bitte versuche es erneut.", "permissionsError": "Die Berechtigung zum Erstellen konnte nicht geprüft werden."},
 		"title": "Benachrichtigungen",
 		"description": "Erinnerungen aus allen Dokumenten, die du aktuell lesen darfst.",
 		"localTimes": "Zeiten werden in deiner lokalen Zeitzone angezeigt.",
@@ -105,6 +106,7 @@
 			"selectGroupTooltip": "Gruppe für den Upload auswählen",
 			"maxSize": "max. {{ size }} MB pro Datei",
 			"errors": {
+		"AI_NOTIFICATION_ACCESS_DENIED": "Du darfst für dieses Dokument keine Benachrichtigungen verwalten.",
 				"empty": "Die Datei ist leer",
 				"tooBig": "Die Datei ist zu groß",
 				"filetypeNotAllowed": "Dieser Dateityp ist nicht erlaubt",

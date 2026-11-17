@@ -1,6 +1,7 @@
 {
 	"pagination": { "label": "Pages", "previous": "Previous", "next": "Next", "page": "Page" },
 	"notifications": {
+		"create": {"heading": "Create reminder", "title": "Title", "message": "Message", "remindAt": "Remind at", "localTimeHint": "Enter the time in your local time zone. This reminder is shared with eligible recipients who have enabled notifications.", "cancel": "Cancel", "submit": "Create", "pending": "Creating…", "required": "Please complete this field.", "titleTooLong": "The title must be at most 255 characters.", "invalidDate": "Enter a valid date and local time.", "failed": "The reminder could not be created. Please try again.", "permissionsError": "Your permission to create reminders could not be checked."},
 		"title": "Notifications",
 		"description": "Reminders from all documents you can currently read.",
 		"localTimes": "Times are shown in your local time zone.",
@@ -105,6 +106,7 @@
 			"selectGroupTooltip": "Select group for upload",
 			"maxSize": "max. {{ size }} MB per file",
 			"errors": {
+		"AI_NOTIFICATION_ACCESS_DENIED": "You do not have permission to manage notifications for this document.",
 				"empty": "File is empty",
 				"tooBig": "File is too big",
 				"filetypeNotAllowed": "File type is not allowed",

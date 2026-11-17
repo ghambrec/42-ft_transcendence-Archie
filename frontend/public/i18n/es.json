@@ -1,6 +1,7 @@
 {
 	"pagination": { "label": "Páginas", "previous": "Anterior", "next": "Siguiente", "page": "Página" },
 	"notifications": {
+		"create": {"heading": "Crear recordatorio", "title": "Título", "message": "Mensaje", "remindAt": "Recordar el", "localTimeHint": "Introduce la hora en tu zona horaria local. El recordatorio se comparte con los destinatarios autorizados que tienen activadas las notificaciones.", "cancel": "Cancelar", "submit": "Crear", "pending": "Creando…", "required": "Completa este campo.", "titleTooLong": "El título no debe superar los 255 caracteres.", "invalidDate": "Introduce una fecha y hora local válidas.", "failed": "No se pudo crear el recordatorio. Inténtalo de nuevo.", "permissionsError": "No se pudo comprobar tu permiso para crear recordatorios."},
 		"title": "Notificaciones",
 		"description": "Recordatorios de todos los documentos que puedes leer actualmente.",
 		"localTimes": "Las horas se muestran en tu zona horaria local.",
@@ -105,6 +106,7 @@
 			"selectGroupTooltip": "Seleccionar el grupo para la subida",
 			"maxSize": "máx. {{ size }} MB por archivo",
 			"errors": {
+		"AI_NOTIFICATION_ACCESS_DENIED": "No tienes permiso para gestionar las notificaciones de este documento.",
 				"empty": "El archivo está vacío",
 				"tooBig": "El archivo es demasiado grande",
 				"filetypeNotAllowed": "Este tipo de archivo no está permitido",
