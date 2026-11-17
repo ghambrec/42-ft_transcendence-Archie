@@ -5,7 +5,7 @@
       class="avatar" (error)="imageError($event)" />
   </div>
   <label for="profile-avatar-file" class="form-label small">{{ 'profile.avatar.choose' | transloco }}</label>
-  <input id="profile-avatar-file" type="file" class="form-control form-control-sm" accept="image/jpeg,image/png,image/webp"
+  <input #fileInput id="profile-avatar-file" type="file" class="form-control form-control-sm" accept="image/jpeg,image/png,image/webp"
     aria-describedby="profile-avatar-hint" [disabled]="uploading() || !userId()" (change)="selectFile($event)" />
   <p id="profile-avatar-hint" class="form-text">{{ 'profile.avatar.hint' | transloco }}</p>
   <div class="d-flex flex-wrap justify-content-center gap-2">
