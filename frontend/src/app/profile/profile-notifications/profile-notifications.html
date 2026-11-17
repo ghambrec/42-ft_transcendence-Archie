@@ -1,0 +1,28 @@
+<section class="card shadow-sm mt-4" aria-labelledby="notification-preference-heading"
+  [attr.aria-busy]="settings.isLoading() || saving()">
+  <div class="card-body">
+    <h2 class="h5 mb-3" id="notification-preference-heading">{{ 'profile.notifications.heading' | transloco }}</h2>
+    <div class="form-check form-switch">
+      <input id="notification-preference" class="form-check-input" type="checkbox" role="switch"
+        aria-describedby="notification-preference-hint" [checked]="active()" [disabled]="disabled()"
+        (change)="changePreference($event)" />
+      <label class="form-check-label" for="notification-preference">{{ 'profile.notifications.label' | transloco }}</label>
+    </div>
+    <p class="text-muted small mt-2 mb-0" id="notification-preference-hint">{{ 'profile.notifications.hint' | transloco }}</p>
+    @if (settings.isLoading()) {
+      <p class="small mt-2 mb-0" role="status">{{ 'profile.notifications.loading' | transloco }}</p>
+    } @else if (settings.error()) {
+      <div class="alert alert-danger mt-3 mb-0" role="alert">
+        {{ 'profile.notifications.loadError' | transloco }}
+        <button type="button" class="btn btn-sm btn-link" (click)="settings.reload()">{{ 'profile.notifications.retry' | transloco }}</button>
+      </div>
+    }
+    @if (saving()) {
+      <p class="small mt-2 mb-0" role="status">{{ 'profile.notifications.saving' | transloco }}</p>
+    } @else if (saveError()) {
+      <div class="alert alert-danger mt-3 mb-0" role="alert">{{ 'profile.notifications.saveError' | transloco }}</div>
+    } @else if (saved()) {
+      <p class="text-success small mt-2 mb-0" role="status">{{ 'profile.notifications.saved' | transloco }}</p>
+    }
+  </div>
+</section>

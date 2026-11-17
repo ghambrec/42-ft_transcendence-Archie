@@ -36,6 +36,8 @@
               [avatarUrl]="avatarUrl()"
               (avatarError)="onAvatarError($event)" />
 
+            <app-profile-notifications />
+
             <app-profile-groups [userGroups]="userGroups()" />
 
           </ng-template>

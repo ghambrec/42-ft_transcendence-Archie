@@ -7,6 +7,7 @@ import { TranslocoPipe } from '@jsverse/transloco';
 import { ProfileEditForm } from './profile-edit-form/profile-edit-form';
 import { ProfileGroups } from './profile-groups/profile-groups';
 import { ProfileSecurity } from './profile-security/profile-security';
+import { ProfileNotifications } from './profile-notifications/profile-notifications';
 
 export interface ProfileUser {
   id: string;
@@ -24,6 +25,7 @@ export interface ProfileUser {
     ProfileEditForm,
     ProfileGroups,
     ProfileSecurity,
+    ProfileNotifications,
     TranslocoPipe,
   ],
   templateUrl: './profile.html',
