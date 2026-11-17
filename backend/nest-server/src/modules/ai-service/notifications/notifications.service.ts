@@ -5,7 +5,7 @@ import aiServiceConfig from 'src/config/ai-service.config';
 import { ApplicationException } from 'src/common/errors/application.exception';
 import { ErrorCode } from 'src/common/errors/error-code';
 import { mapAiServiceError } from 'src/common/errors/ai-service-error.mapper';
-import { CreatedNotificationDto, CreateNotificationDto, ListNotificationsQueryDto, NotificationListDto } from './dto/notification.dto';
+import { CreatedNotificationDto, CreateNotificationDto, ListNotificationsQueryDto, NotificationListDto, UpdateNotificationDto, UpdatedNotificationDto } from './dto/notification.dto';
 
 @Injectable()
 export class NotificationsService {
@@ -29,9 +29,15 @@ export class NotificationsService {
         },
         signal: AbortSignal.timeout(this.config.requestTimeoutMs),
       });
-      // A missing internal route is a deployment problem, not a missing conversation.
-      if (response.status === 404) throw new ApplicationException(ErrorCode.AiServiceUnavailable);
+      // Distinguish a missing record from an outdated deployment missing this route.
+      if (response.status === 404) {
+        const payload = await response.clone().json().catch(() => null);
+        if (payload?.detail?.code !== ErrorCode.AiNotificationNotFound) {
+          throw new ApplicationException(ErrorCode.AiServiceUnavailable);
+        }
+      }
       if (!response.ok) throw await mapAiServiceError(response);
+      if (response.status === 204 && init.method === 'DELETE') return undefined as T;
       try {
         return await response.json() as T;
       } catch {
@@ -46,6 +52,14 @@ export class NotificationsService {
 
   create(userId: string, dto: CreateNotificationDto): Promise<CreatedNotificationDto> {
     return this.request(userId, '/notification', { method: 'POST', body: JSON.stringify(dto) });
+  }
+
+  update(userId: string, id: string, dto: UpdateNotificationDto): Promise<UpdatedNotificationDto> {
+    return this.request(userId, `/notifications/${id}`, { method: 'PATCH', body: JSON.stringify(dto) });
+  }
+
+  delete(userId: string, id: string): Promise<void> {
+    return this.request(userId, `/notifications/${id}`, { method: 'DELETE' });
   }
 
   list(userId: string, query: ListNotificationsQueryDto): Promise<NotificationListDto> {

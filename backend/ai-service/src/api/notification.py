@@ -60,7 +60,7 @@ async def update_notification(request: Request, notification_id: UUID, body: Upd
 async def delete_notification(request: Request, notification_id: UUID, user_id: UUID = Depends(get_user_id)):
     try:
         await service.delete_notification(pool=request.app.state.db_pool, user_id=user_id, notification_id=notification_id)
-    except (service.NotificationAccessDeniedError, service.NotificationNotFoundError) as error:
+    except (service.NotificationAccessDeniedError, service.NotificationNotFoundError, service.NotificationConflictError) as error:
         raise mutation_error(error) from error
     return Response(status_code=204)
 

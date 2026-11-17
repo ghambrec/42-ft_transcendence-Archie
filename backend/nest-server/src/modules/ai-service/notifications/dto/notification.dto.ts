@@ -1,4 +1,4 @@
-import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
+import { ApiProperty, ApiPropertyOptional, OmitType, PartialType } from '@nestjs/swagger';
 import { Transform, Type } from 'class-transformer';
 import { IsDateString, IsInt, IsNotEmpty, IsOptional, IsString, IsUUID, Matches, Max, MaxLength, Min } from 'class-validator';
 
@@ -51,6 +51,15 @@ export class ListNotificationsQueryDto {
   @IsInt()
   @Min(0)
   offset: number = 0;
+}
+
+export class UpdateNotificationDto extends PartialType(
+  OmitType(CreateNotificationDto, ['document_id'] as const), { skipNullProperties: false },
+) {}
+
+export class UpdatedNotificationDto {
+  @ApiProperty({ format: 'uuid' })
+  id!: string;
 }
 
 export class CreatedNotificationDto {
