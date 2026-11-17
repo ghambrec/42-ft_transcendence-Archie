@@ -56,40 +56,50 @@ make
 
 `make` (same as `make up`) builds the images and starts the production stack including monitoring: the Angular build is served by Caddy, NestJS runs the compiled application, and the AI service runs without reload. The NestJS container runs the database migrations before it starts, the AI container creates its own tables. The first start takes longer because the Ollama initializer downloads the configured models.
 
+NestJS waits for `minio-init` to finish successfully before starting, so the storage initialization runs before the application creates default profile avatars.
+
 Open https://localhost afterwards. Caddy issues the certificate from its own local authority, so the browser shows a certificate warning that has to be accepted once. Log in with the administrator account from `env/.env`; the application asks for a new password on the first login.
 
-For development use the dev stack instead:
-
-```sh
-make dev
-```
-
-It adds `docker-compose.dev.yml` on top: source directories are mounted, NestJS, the AI service, the worker and the Angular dev server restart on file changes, and some ports are published on `127.0.0.1`. The entry point stays https://localhost. Run `make down` before switching between the two stacks.
+Monitoring is part of the default Compose stack. Grafana, Prometheus, cAdvisor and Node Exporter start automatically; no additional profile or separate start command is needed. After changing application code, run `make up` again to rebuild the images.
 
 ### Endpoints
 
-| Service | Address | Stack |
-| --- | --- | --- |
-| Application | https://localhost | prod and dev |
-| NestJS API | https://localhost/api | prod and dev |
-| Swagger documentation | https://localhost/api/docs | prod and dev |
-| Grafana | https://localhost/grafana | prod and dev |
-| Prometheus | http://127.0.0.1:9090 | prod and dev |
-| NestJS API, direct | http://127.0.0.1:3000 | dev only |
-| MinIO console | http://127.0.0.1:9001 | dev only |
-| Adminer | http://127.0.0.1:8080 | dev only |
-| PostgreSQL | `127.0.0.1:5432` | dev only |
+| Service | Address |
+| --- | --- |
+| Application | https://localhost |
+| NestJS API | https://localhost/api |
+| Swagger documentation | https://localhost/api/docs |
+| Grafana | https://localhost/grafana |
+| Prometheus | http://127.0.0.1:9090 |
 
-Only port 443 is published to the network. Ports bound to `127.0.0.1` are reachable from the local machine only. Redis, the MinIO API, the AI service and Ollama do not publish a host port in either stack.
+Only port 443 is published to the network. Prometheus is bound to `127.0.0.1` and reachable from the local machine only. PostgreSQL, Redis, MinIO, NestJS, the AI service and Ollama do not publish a host port.
+
+### Monitoring
+
+Log in to Grafana with `GF_SECURITY_ADMIN_USER` and `GF_SECURITY_ADMIN_PASSWORD` from `env/.env`. The Prometheus data source and the dashboards in the **Archi** folder are provisioned automatically from `monitoring/grafana/`, including on a fresh installation. Edit their repository files to make persistent changes.
+
+Prometheus loads the `ServiceDown` rule from `monitoring/alerts.yml`. It fires when a monitored target cannot be scraped for one minute. Check target health at http://127.0.0.1:9090/targets and alert state at http://127.0.0.1:9090/alerts. No email or other external alert delivery is configured.
+
+To demonstrate the alert:
+
+```sh
+docker compose stop node-exporter
+# Wait approximately 1–3 minutes, then check the alerts page (job: laptop).
+docker compose start node-exporter
+```
+
+The alert resolves automatically after Prometheus can scrape the exporter again.
 
 ### Useful commands
 
 ```sh
-# Stop prod or dev stack, volumes are kept
+# Stop the stack; volumes are kept
 make down
 
-# Remove containers and images / also remove all volumes (deletes stored data)
+# Remove containers and images; volumes are kept
 make clean
+
+# Also remove all stack volumes (deletes stored data)
 make fclean
 
 # Follow the logs
@@ -103,6 +113,8 @@ make test
 ```
 
 `make test` uses `docker-compose.test.yml` and `env/.env.test` and does not touch the data of the running stack.
+
+**`make fclean` deletes the database, uploaded documents and avatars, sessions, downloaded Ollama models, monitoring history, Grafana state and Caddy certificates.** It keeps `env/.env` and the repository provisioning files. The next `make up` initializes fresh storage and downloads the models again; the browser may show a new certificate warning. For a rebuild that preserves data, use `make down` followed by `make up`.
 
 ## Team Information
 
@@ -236,9 +248,9 @@ erDiagram
 | Document chat | Permission-aware retrieval, generation with sources and confidence, conversation history | poverbec, ghambrec |
 | Chat interface | Conversation list, messages, sources, rename and delete | poverbec |
 | Internationalization | English, German and Spanish translations, language stored per user | ghambrec, poverbec |
-| Monitoring | Metrics endpoints, Prometheus, Grafana dashboards, cAdvisor, node-exporter | poverbec |
+| Monitoring | Metrics endpoints, Prometheus, provisioned Grafana data source and dashboards, cAdvisor, node-exporter, service availability alert | poverbec |
 | CI and tests | GitHub Actions, end-to-end test stack | nluchini |
-| Deployment | Docker Compose, Caddy with HTTPS, network separation, prod and dev stack | ghambrec |
+| Deployment | Docker Compose, Caddy with HTTPS, network separation, application and monitoring stack | ghambrec |
 
 ## Modules
 
@@ -250,7 +262,7 @@ erDiagram
 | Organization system | Major | 2 | Groups with members; documents, permissions and search are scoped to groups | cbauer, ghambrec |
 | RAG system | Major | 2 | Chunking, embeddings in pgvector, retrieval limited to readable documents, answers with sources | poverbec, ghambrec |
 | LLM system interface | Major | 2 | Structured summaries and tag suggestions during ingestion, chat generation, local or external provider | ghambrec, poverbec |
-| Monitoring with Prometheus and Grafana | Major | 2 | Custom metrics in NestJS and the AI service, exporters, provisioned dashboards, Grafana behind HTTPS | poverbec |
+| Monitoring with Prometheus and Grafana | Major | 2 | Custom metrics in NestJS and the AI service, exporters, provisioned data source and dashboards, ServiceDown alert, Grafana login behind HTTPS | poverbec |
 | ORM | Minor | 1 | TypeORM entities and migrations | nluchini |
 | File upload and management | Minor | 1 | Type and size validation, storage in MinIO, preview, progress, delete | nluchini, ghambrec |
 | Advanced search | Minor | 1 | Filters, sorting, pagination, ranking and highlighting | ghambrec |
@@ -335,10 +347,9 @@ frontend/                 Angular application, translations, and Caddy configura
 backend/nest-server/      NestJS API, TypeORM migrations, and backend tests
 backend/ai-service/       FastAPI API, ARQ worker, analysis, and vector indexing
 backend/postgres-init/    PostgreSQL extension initialization
-monitoring/               Prometheus configuration and Grafana dashboards
+monitoring/               Prometheus configuration and alert rules, Grafana provisioning and dashboards
 env/                      Environment templates and test configuration
-docker-compose.yml        Production stack
-docker-compose.dev.yml    Development override (hot reload, local ports)
+docker-compose.yml        Application and monitoring stack
 docker-compose.test.yml   Backend end-to-end test infrastructure
 Makefile                  Start, cleanup, and test commands
 ```
