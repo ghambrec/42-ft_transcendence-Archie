@@ -80,8 +80,6 @@
 			"selectGroupTooltip": "Gruppe für den Upload auswählen",
 			"maxSize": "max. {{ size }} MB pro Datei",
 			"errors": {
-		"AVATAR_FILE_TOO_LARGE": "Das Profilbild darf höchstens 5 MB groß sein.",
-		"INVALID_AVATAR_FILE_TYPE": "Bitte wähle ein gültiges JPG-, PNG- oder WebP-Bild.",
 				"empty": "Die Datei ist leer",
 				"tooBig": "Die Datei ist zu groß",
 				"filetypeNotAllowed": "Dieser Dateityp ist nicht erlaubt",
@@ -559,6 +557,8 @@
 		}
 	},
 	"errors": {
+		"AVATAR_FILE_TOO_LARGE": "Das Profilbild darf höchstens 5 MB groß sein.",
+		"INVALID_AVATAR_FILE_TYPE": "Bitte wähle ein gültiges JPG-, PNG- oder WebP-Bild.",
 		"AUTH_EMAIL_ALREADY_REGISTERED": "Diese E-Mail-Adresse ist bereits registriert.",
 		"AUTH_INVALID_CREDENTIALS": "Ungültige E-Mail-Adresse oder ungültiges Passwort.",
 		"USER_NOT_FOUND": "Der Benutzer wurde nicht gefunden.",
