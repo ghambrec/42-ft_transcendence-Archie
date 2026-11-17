@@ -1,0 +1,13 @@
+:host {
+  display: block;
+  min-width: 0;
+}
+
+.notification-text,
+.notification-message {
+  overflow-wrap: anywhere;
+}
+
+.notification-message {
+  white-space: pre-wrap;
+}

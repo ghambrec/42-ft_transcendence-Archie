@@ -1,0 +1,33 @@
+<div class="d-flex flex-wrap justify-content-between align-items-center gap-2 mb-3">
+  <small class="text-secondary">{{ 'notifications.localTimes' | transloco }}</small>
+  <button type="button" class="btn btn-sm btn-outline-secondary" (click)="resource.reload()" [disabled]="resource.isLoading()">
+    <i class="bi bi-arrow-clockwise me-1" aria-hidden="true"></i>{{ 'notifications.refresh' | transloco }}
+  </button>
+</div>
+<p class="small text-secondary mb-3">{{ 'notifications.sharedStatusHint' | transloco }}</p>
+
+@if (resource.isLoading()) {
+  <div role="status" aria-live="polite" class="text-secondary py-3">
+    <span class="spinner-border spinner-border-sm me-2" aria-hidden="true"></span>{{ 'notifications.loading' | transloco }}
+  </div>
+} @else if (resource.error()) {
+  <div role="alert" class="alert alert-danger">
+    <p class="mb-2">{{ 'notifications.loadError' | transloco }}</p>
+    <button type="button" class="btn btn-sm btn-outline-danger" (click)="resource.reload()">{{ 'notifications.retry' | transloco }}</button>
+  </div>
+} @else {
+  <div class="notification-grid">
+    @for (notification of page().data; track notification.id) {
+      <app-notification-card [notification]="notification" [showDocumentLink]="showDocumentLinks()" />
+    } @empty {
+      <p class="text-secondary py-3 mb-0">{{ (documentId() ? 'notifications.emptyDocument' : 'notifications.empty') | transloco }}</p>
+    }
+  </div>
+}
+
+@if (offset() > 0 || page().has_more) {
+  <app-page-navigation class="d-block mt-3"
+    [page]="pageNumber()" [hasPrevious]="offset() > 0"
+    [hasNext]="page().has_more && !resource.error()" [disabled]="resource.isLoading()"
+    (previous)="previousPage()" (next)="nextPage()" />
+}
