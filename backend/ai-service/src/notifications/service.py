@@ -13,6 +13,68 @@ from datetime import date, datetime
 class NotificationAccessDeniedError(Exception):
 	pass
 
+
+class NotificationNotFoundError(Exception):
+    pass
+
+
+class NotificationConflictError(Exception):
+    pass
+
+
+async def lock_notification(connection: asyncpg.Connection, user_id: UUID, notification_id: UUID):
+    notification = await connection.fetchrow(
+        "SELECT id, document_id FROM ai_notifications WHERE id = $1 FOR UPDATE", notification_id,
+    )
+    if notification is None:
+        raise NotificationNotFoundError()
+    for permission in ("documents.read", "notifications.manage"):
+        if not await has_document_permission(connection, user_id, notification["document_id"], permission):
+            raise NotificationAccessDeniedError()
+    # Serialize mutations with the sender, which locks individual reminders.
+    reminders = await connection.fetch(
+        "SELECT * FROM ai_notification_reminders WHERE ai_notification_id = $1 ORDER BY id FOR UPDATE",
+        notification_id,
+    )
+    return reminders
+
+
+async def update_notification(pool: asyncpg.Pool, *, user_id: UUID, notification_id: UUID, changes: dict) -> dict:
+    async with pool.acquire() as connection:
+        async with connection.transaction():
+            reminders = await lock_notification(connection, user_id, notification_id)
+            if "remind_at" in changes:
+                if len(reminders) != 1:
+                    raise NotificationConflictError()
+                reminder = reminders[0]
+                remind_at = changes["remind_at"]
+                if remind_at != reminder["remind_at"]:
+                    now = await connection.fetchval("SELECT clock_timestamp()")
+                    reopen = remind_at > now or (reminder["sent_at"] is None and reminder["skipped_at"] is None)
+                    await connection.execute(
+                        """UPDATE ai_notification_reminders SET remind_at = $2,
+                        sent_at = CASE WHEN $3 THEN NULL ELSE sent_at END,
+                        skipped_at = CASE WHEN $3 THEN NULL ELSE skipped_at END,
+                        error_key = CASE WHEN $3 THEN NULL ELSE error_key END,
+                        error_detail = CASE WHEN $3 THEN NULL ELSE error_detail END,
+                        next_attempt_at = CASE WHEN $3 THEN NULL ELSE next_attempt_at END
+                        WHERE id = $1""", reminder["id"], remind_at, reopen,
+                    )
+            await connection.execute(
+                """UPDATE ai_notifications SET title = COALESCE($2, title),
+                message = COALESCE($3, message), due_date = COALESCE($4, due_date),
+                updated_at = clock_timestamp() WHERE id = $1""",
+                notification_id, changes.get("title"), changes.get("message"), changes.get("due_date"),
+            )
+    return {"id": notification_id}
+
+
+async def delete_notification(pool: asyncpg.Pool, *, user_id: UUID, notification_id: UUID) -> None:
+    async with pool.acquire() as connection:
+        async with connection.transaction():
+            await lock_notification(connection, user_id, notification_id)
+            await connection.execute("DELETE FROM ai_notifications WHERE id = $1", notification_id)
+
 async def create_notification_manual(
 		pool: asyncpg.Pool,
 		*,
