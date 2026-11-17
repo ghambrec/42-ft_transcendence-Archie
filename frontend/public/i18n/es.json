@@ -1,6 +1,21 @@
 {
 	"pagination": { "label": "Páginas", "previous": "Anterior", "next": "Siguiente", "page": "Página" },
 	"notifications": {
+		"delete": {
+			"heading": "Eliminar recordatorio",
+			"submit": "Eliminar",
+			"pending": "Eliminando…",
+			"failed": "No se pudo confirmar la eliminación. Actualiza la lista e inténtalo de nuevo.",
+			"description": "La notificación compartida y sus recordatorios programados se eliminarán para todos. Los correos ya enviados no se pueden recuperar."
+		},
+		"edit": {
+			"heading": "Editar recordatorio",
+			"submit": "Guardar",
+			"pending": "Guardando…",
+			"failed": "No se pudo confirmar el cambio. Inténtalo de nuevo.",
+			"deliveryHint": "Cambiar el texto no reenvía correos. Cambiar la hora del recordatorio a una hora futura vuelve a programar el envío.",
+			"aiHint": "Los cambios en recordatorios de IA se sobrescriben al analizar de nuevo el documento."
+		},
 		"create": {"heading": "Crear recordatorio", "title": "Título", "message": "Mensaje", "remindAt": "Recordar el", "localTimeHint": "Introduce la hora en tu zona horaria local. El recordatorio se comparte con los destinatarios autorizados que tienen activadas las notificaciones.", "cancel": "Cancelar", "submit": "Crear", "pending": "Creando…", "required": "Completa este campo.", "titleTooLong": "El título no debe superar los 255 caracteres.", "invalidDate": "Introduce una fecha y hora local válidas.", "failed": "No se pudo crear el recordatorio. Inténtalo de nuevo.", "permissionsError": "No se pudo comprobar tu permiso para crear recordatorios."},
 		"title": "Notificaciones",
 		"description": "Recordatorios de todos los documentos que puedes leer actualmente.",
@@ -106,6 +121,8 @@
 			"selectGroupTooltip": "Seleccionar el grupo para la subida",
 			"maxSize": "máx. {{ size }} MB por archivo",
 			"errors": {
+		"AI_NOTIFICATION_CONFLICT": "No se puede modificar la notificación en este momento. Actualiza la lista e inténtalo de nuevo.",
+		"AI_NOTIFICATION_NOT_FOUND": "La notificación ya no existe. Actualiza la lista.",
 		"AI_NOTIFICATION_ACCESS_DENIED": "No tienes permiso para gestionar las notificaciones de este documento.",
 				"empty": "El archivo está vacío",
 				"tooBig": "El archivo es demasiado grande",
@@ -506,6 +523,17 @@
 		}
 	},
 	"profile": {
+		"notifications": {
+			"heading": "Notificaciones",
+			"label": "Recibir correos de recordatorio",
+			"hint": "Se aplica a los recordatorios de todos los documentos que puedes leer. Los cambios se guardan de inmediato. Activar esta opción no reenvía los recordatorios ya enviados u omitidos definitivamente.",
+			"loading": "Cargando preferencia…",
+			"saving": "Guardando…",
+			"saved": "Preferencia guardada.",
+			"loadError": "No se pudo cargar la preferencia.",
+			"saveError": "No se pudo confirmar que el cambio se haya guardado. Inténtalo de nuevo.",
+			"retry": "Reintentar"
+		},
 		"heading": "Perfil",
 		"description": "Gestione la configuración de su cuenta personal.",
 		"active": "Activo",
