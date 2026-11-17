@@ -1,6 +1,30 @@
 {
+	"pagination": { "label": "Seitennavigation", "previous": "Zurück", "next": "Weiter", "page": "Seite" },
+	"notifications": {
+		"title": "Benachrichtigungen",
+		"description": "Erinnerungen aus allen Dokumenten, die du aktuell lesen darfst.",
+		"localTimes": "Zeiten werden in deiner lokalen Zeitzone angezeigt.",
+		"sharedStatusHint": "Der Versandstatus gilt für die gemeinsame Erinnerung, nicht für einzelne Empfänger.",
+		"refresh": "Aktualisieren",
+		"loading": "Benachrichtigungen werden geladen…",
+		"loadError": "Benachrichtigungen konnten nicht geladen werden.",
+		"retry": "Erneut versuchen",
+		"empty": "Noch keine Benachrichtigungen für deine lesbaren Dokumente.",
+		"emptyDocument": "Noch keine Benachrichtigungen für dieses Dokument.",
+		"dueDate": "Fälligkeit",
+		"reminders": "E-Mail-Erinnerungen",
+		"noReminders": "Keine E-Mail-Erinnerungen geplant.",
+		"sentAt": "Versendet am",
+		"skippedAt": "Übersprungen am",
+		"nextAttempt": "Nächster Versuch",
+		"deliveryError": "Der E-Mail-Versand ist fehlgeschlagen. Ein neuer Versuch ist geplant.",
+		"noRecipients": "Beim letzten Versuch waren keine berechtigten Empfänger verfügbar.",
+		"source": { "ai": "KI", "manual": "Manuell" },
+		"status": { "scheduled": "Geplant", "sent": "Versendet", "skipped": "Übersprungen", "failed": "Fehlgeschlagen" }
+	},
 	"programName": "Archie",
 	"pageTitle": {
+		"notifications": "Benachrichtigungen",
 		"login": "Anmelden",
 		"signup": "Registrieren",
 		"privacy": "Datenschutzerklärung",
@@ -11,6 +35,7 @@
 		"settings": "Einstellungen"
 	},
 	"sidebar": {
+		"notifications": "Benachrichtigungen",
 		"toggle": "Navigation ein-/ausklappen",
 		"settings": "Einstellungen",
 		"documents": "Dokumente",

@@ -1,6 +1,30 @@
 {
+	"pagination": { "label": "Pages", "previous": "Previous", "next": "Next", "page": "Page" },
+	"notifications": {
+		"title": "Notifications",
+		"description": "Reminders from all documents you can currently read.",
+		"localTimes": "Times are shown in your local time zone.",
+		"sharedStatusHint": "The delivery status applies to the shared reminder, not to individual recipients.",
+		"refresh": "Refresh",
+		"loading": "Loading notifications…",
+		"loadError": "Notifications could not be loaded.",
+		"retry": "Try again",
+		"empty": "No notifications for your readable documents yet.",
+		"emptyDocument": "No notifications for this document yet.",
+		"dueDate": "Due date",
+		"reminders": "Email reminders",
+		"noReminders": "No email reminders scheduled.",
+		"sentAt": "Sent at",
+		"skippedAt": "Skipped at",
+		"nextAttempt": "Next attempt",
+		"deliveryError": "Email delivery failed. A retry is planned.",
+		"noRecipients": "No eligible recipients were available at the last attempt.",
+		"source": { "ai": "AI", "manual": "Manual" },
+		"status": { "scheduled": "Scheduled", "sent": "Sent", "skipped": "Skipped", "failed": "Failed" }
+	},
 	"programName": "Archie",
 	"pageTitle": {
+		"notifications": "Notifications",
 		"login": "Login",
 		"signup": "Sign up",
 		"privacy": "Privacy Policy",
@@ -11,6 +35,7 @@
 		"settings": "Settings"
 	},
 	"sidebar": {
+		"notifications": "Notifications",
 		"toggle": "Toggle navigation",
 		"settings": "Settings",
 		"documents": "Documents",

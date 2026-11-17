@@ -1,6 +1,30 @@
 {
+	"pagination": { "label": "Páginas", "previous": "Anterior", "next": "Siguiente", "page": "Página" },
+	"notifications": {
+		"title": "Notificaciones",
+		"description": "Recordatorios de todos los documentos que puedes leer actualmente.",
+		"localTimes": "Las horas se muestran en tu zona horaria local.",
+		"sharedStatusHint": "El estado del envío corresponde al recordatorio compartido, no a cada destinatario.",
+		"refresh": "Actualizar",
+		"loading": "Cargando notificaciones…",
+		"loadError": "No se pudieron cargar las notificaciones.",
+		"retry": "Reintentar",
+		"empty": "Todavía no hay notificaciones para tus documentos accesibles.",
+		"emptyDocument": "Todavía no hay notificaciones para este documento.",
+		"dueDate": "Vencimiento",
+		"reminders": "Recordatorios por correo",
+		"noReminders": "No hay recordatorios por correo programados.",
+		"sentAt": "Enviado el",
+		"skippedAt": "Omitido el",
+		"nextAttempt": "Próximo intento",
+		"deliveryError": "El envío del correo falló. Se ha programado otro intento.",
+		"noRecipients": "No había destinatarios autorizados disponibles en el último intento.",
+		"source": { "ai": "IA", "manual": "Manual" },
+		"status": { "scheduled": "Programado", "sent": "Enviado", "skipped": "Omitido", "failed": "Fallido" }
+	},
 	"programName": "Archie",
 	"pageTitle": {
+		"notifications": "Notificaciones",
 		"login": "Iniciar sesión",
 		"signup": "Registrarse",
 		"privacy": "Política de privacidad",
@@ -11,6 +35,7 @@
 		"settings": "Configuración"
 	},
 	"sidebar": {
+		"notifications": "Notificaciones",
 		"toggle": "Mostrar/ocultar navegación",
 		"settings": "Configuración",
 		"documents": "Documentos",
