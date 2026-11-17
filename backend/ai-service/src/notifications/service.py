@@ -22,21 +22,23 @@ class NotificationConflictError(Exception):
     pass
 
 
-async def lock_notification(connection: asyncpg.Connection, user_id: UUID, notification_id: UUID):
-    notification = await connection.fetchrow(
-        "SELECT id, document_id FROM ai_notifications WHERE id = $1 FOR UPDATE", notification_id,
-    )
-    if notification is None:
-        raise NotificationNotFoundError()
-    for permission in ("documents.read", "notifications.manage"):
-        if not await has_document_permission(connection, user_id, notification["document_id"], permission):
-            raise NotificationAccessDeniedError()
-    # Serialize mutations with the sender, which locks individual reminders.
-    reminders = await connection.fetch(
-        "SELECT * FROM ai_notification_reminders WHERE ai_notification_id = $1 ORDER BY id FOR UPDATE",
-        notification_id,
-    )
-    return reminders
+async def lock_notification(connection: asyncpg.Connection, user_id: UUID, notification_id: UUID) -> list[asyncpg.Record]:
+    try:
+        notification = await connection.fetchrow(
+            "SELECT id, document_id FROM ai_notifications WHERE id = $1 FOR UPDATE NOWAIT", notification_id,
+        )
+        if notification is None:
+            raise NotificationNotFoundError()
+        for permission in ("documents.read", "notifications.manage"):
+            if not await has_document_permission(connection, user_id, notification["document_id"], permission):
+                raise NotificationAccessDeniedError()
+        # Reject overlapping writes/delivery rather than commit after the HTTP proxy times out.
+        return await connection.fetch(
+            "SELECT * FROM ai_notification_reminders WHERE ai_notification_id = $1 ORDER BY id FOR UPDATE NOWAIT",
+            notification_id,
+        )
+    except asyncpg.LockNotAvailableError as error:
+        raise NotificationConflictError() from error
 
 
 async def update_notification(pool: asyncpg.Pool, *, user_id: UUID, notification_id: UUID, changes: dict) -> dict:
