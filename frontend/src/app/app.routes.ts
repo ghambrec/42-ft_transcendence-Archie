@@ -58,6 +58,11 @@ export const routes: Routes = [
 				title: 'pageTitle.aiChat',
 			},
 			{
+				path: 'notifications',
+				loadComponent: () => import('./notifications/notifications-page').then(m => m.NotificationsPage),
+				title: 'pageTitle.notifications',
+			},
+			{
 				path: 'ai-chat/:id',
 				component: AIChat,
 				title: 'pageTitle.aiChat',
