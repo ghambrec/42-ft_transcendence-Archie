@@ -6,6 +6,7 @@ from src.config import settings
 from uuid import UUID
 
 from src.notifications import service
+from src.notifications.schemas import NotificationTitle
 from datetime import date, datetime
 from pydantic import BaseModel, Field, AwareDatetime, ConfigDict, model_validator
 from redis.exceptions import RedisError
@@ -16,8 +17,9 @@ router = APIRouter(tags=["notififications"], dependencies=[Security(check_api_ke
 
 
 class CreateNotificationRequest(BaseModel):
+    model_config = ConfigDict(str_strip_whitespace=True)
     document_id: UUID
-    title: str = Field(strip_whitespace=True, min_length=1, max_length=255)
+    title: NotificationTitle
     message: str = Field(min_length=1)
     due_date: date
     remind_at: AwareDatetime
@@ -25,7 +27,7 @@ class CreateNotificationRequest(BaseModel):
 
 class UpdateNotificationRequest(BaseModel):
     model_config = ConfigDict(str_strip_whitespace=True, extra="forbid")
-    title: str | None = Field(default=None, min_length=1, max_length=255)
+    title: NotificationTitle | None = None
     message: str | None = Field(default=None, min_length=1)
     due_date: date | None = None
     remind_at: AwareDatetime | None = None

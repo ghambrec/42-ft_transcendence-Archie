@@ -11,6 +11,7 @@ from typing import Literal
 
 from src.generation.model import build_model, get_output_type, get_max_input_chars
 from src.notifications.scheduling import today_in_berlin
+from src.notifications.schemas import NotificationTitle
 
 logger = logging.getLogger(__name__)
 
@@ -31,7 +32,7 @@ class Tags(BaseModel):
 class DocumentReminder(BaseModel):
     model_config = ConfigDict(str_strip_whitespace=True)
 
-    title: str = Field(min_length=1, max_length=255, description="Short action title in the document's language")
+    title: NotificationTitle = Field(description="Short single-line action title in the document's language")
     message: str = Field(min_length=1, description="What must be done by the deadline, grounded in the document, in its language")
     due_date: date = Field(description="Actual action deadline as YYYY-MM-DD; not the invoice, issue or service date")
 

@@ -12,7 +12,7 @@ async def send_mail(recipient: str, subject: str, body: str) -> None:
     message = EmailMessage()
     message["From"] = settings.mail_from
     message["To"] = recipient
-    message["Subject"] = subject
+    message["Subject"] = " ".join(subject.split()) or "Reminder"
     message.set_content(body)
 
     await aiosmtplib.send(

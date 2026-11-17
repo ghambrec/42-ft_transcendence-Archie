@@ -14,6 +14,7 @@ export class CreateNotificationDto {
   @IsString()
   @IsNotEmpty()
   @MaxLength(255)
+  @Matches(/^[^\r\n]+$/)
   title!: string;
 
   @ApiProperty({ minLength: 1 })

@@ -22,6 +22,12 @@ class NotificationConflictError(Exception):
     pass
 
 
+async def require_notification_management(connection: asyncpg.Connection, user_id: UUID, document_id: UUID) -> None:
+    for permission in ("documents.read", "notifications.manage"):
+        if not await has_document_permission(connection, user_id, document_id, permission):
+            raise NotificationAccessDeniedError()
+
+
 async def lock_notification(connection: asyncpg.Connection, user_id: UUID, notification_id: UUID) -> list[asyncpg.Record]:
     try:
         notification = await connection.fetchrow(
@@ -29,9 +35,7 @@ async def lock_notification(connection: asyncpg.Connection, user_id: UUID, notif
         )
         if notification is None:
             raise NotificationNotFoundError()
-        for permission in ("documents.read", "notifications.manage"):
-            if not await has_document_permission(connection, user_id, notification["document_id"], permission):
-                raise NotificationAccessDeniedError()
+        await require_notification_management(connection, user_id, notification["document_id"])
         # Reject overlapping writes/delivery rather than commit after the HTTP proxy times out.
         return await connection.fetch(
             "SELECT * FROM ai_notification_reminders WHERE ai_notification_id = $1 ORDER BY id FOR UPDATE NOWAIT",
@@ -89,14 +93,7 @@ async def create_notification_manual(
 )-> dict[str, UUID]:
 	async with pool.acquire() as connection:
 		async with connection.transaction():
-			allowed = await  has_document_permission(
-				connection=  connection,
-				user_id=user_id,
-				document_id= document_id,
-				permission = "notifications.manage",
-			)
-			if not allowed:
-				raise NotificationAccessDeniedError()
+			await require_notification_management(connection, user_id, document_id)
 	
 			notification_id = await connection.fetchval(
 				"""
