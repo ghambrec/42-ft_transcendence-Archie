@@ -531,6 +531,17 @@
 			"saveError": "Saving could not be confirmed. Please try again.",
 			"retry": "Try again"
 		},
+		"avatar": {
+			"heading": "Profile picture",
+			"imageAlt": "Your profile picture",
+			"choose": "Choose an image",
+			"hint": "JPG, PNG or WebP, up to 5 MB.",
+			"upload": "Save profile picture",
+			"uploading": "Uploading…",
+			"cancel": "Cancel",
+			"saved": "Profile picture saved.",
+			"error": "The profile picture could not be saved. Please try again."
+		},
 		"heading": "Profile",
 		"description": "Manage your personal account settings.",
 		"active": "Active",
@@ -604,6 +615,8 @@
 		}
 	},
 	"errors": {
+		"AVATAR_FILE_TOO_LARGE": "The profile picture must not exceed 5 MB.",
+		"INVALID_AVATAR_FILE_TYPE": "Please choose a valid JPG, PNG or WebP image.",
 		"AUTH_EMAIL_ALREADY_REGISTERED": "This email address is already registered.",
 		"AUTH_INVALID_CREDENTIALS": "Invalid email or password.",
 		"USER_NOT_FOUND": "User was not found.",

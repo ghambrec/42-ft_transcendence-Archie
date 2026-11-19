@@ -534,6 +534,17 @@
 			"saveError": "No se pudo confirmar que el cambio se haya guardado. Inténtalo de nuevo.",
 			"retry": "Reintentar"
 		},
+		"avatar": {
+			"heading": "Foto de perfil",
+			"imageAlt": "Tu foto de perfil",
+			"choose": "Elegir imagen",
+			"hint": "JPG, PNG o WebP, máximo 5 MB.",
+			"upload": "Guardar foto de perfil",
+			"uploading": "Subiendo…",
+			"cancel": "Cancelar",
+			"saved": "Foto de perfil guardada.",
+			"error": "No se pudo guardar la foto de perfil. Inténtalo de nuevo."
+		},
 		"heading": "Perfil",
 		"description": "Gestione la configuración de su cuenta personal.",
 		"active": "Activo",
@@ -602,6 +613,8 @@
 		}
 	},
 	"errors": {
+		"AVATAR_FILE_TOO_LARGE": "La foto de perfil no debe superar los 5 MB.",
+		"INVALID_AVATAR_FILE_TYPE": "Elige una imagen JPG, PNG o WebP válida.",
 		"AUTH_EMAIL_ALREADY_REGISTERED": "Esta dirección de correo electrónico ya está registrada.",
 		"AUTH_INVALID_CREDENTIALS": "El correo electrónico o la contraseña no son válidos.",
 		"USER_NOT_FOUND": "No se encontró el usuario.",

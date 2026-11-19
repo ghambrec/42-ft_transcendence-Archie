@@ -28,7 +28,7 @@ import { UpdateUserDto } from './dto/update-user.dto';
 import { UserSummaryDto } from './dto/user-summary.dto';
 import { GetUsersResponseDto } from './dto/get-users-response.dto';
 import { GetUsersQueryDto } from './dto/get-users-query.dto';
-import { FileInterceptor } from '@nestjs/platform-express';
+import { AvatarUploadInterceptor } from './avatar-upload.interceptor';
 import { PatchAvatarResponseDto } from './dto/patch-avatar-response.dto';
 import { SelfOrAdminGuard } from '../permissions/guards/self-or-admin.guard';
 import { AdminRequiredGuard } from '../permissions/guards/admin-required.guard';
@@ -143,7 +143,7 @@ export class UsersController {
 		}
 	}
   })
-  @UseInterceptors(FileInterceptor('file'))
+  @UseInterceptors(AvatarUploadInterceptor)
   @Patch(':userId/avatar')
   async patchAvatar(
 	@Param('userId') userId: string,

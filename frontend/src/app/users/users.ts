@@ -2,6 +2,7 @@ import { Service, computed, inject, signal, type Signal } from '@angular/core';
 import { HttpClient, httpResource } from '@angular/common/http';
 import { environment } from '../../environments/environment';
 import { SupportedLanguage } from '../core/i18n/supported-language';
+import { tap } from 'rxjs';
 
 export interface UserGroupMembership {
 	groupId: string;
@@ -85,6 +86,7 @@ export class Users {
 	private readonly http = inject(HttpClient);
 	private readonly baseUrl = `${environment.apiUrl}/users`;
 	private readonly userGroupsUrl = `${environment.apiUrl}/user-groups`;
+  private readonly avatarVersions = signal<Record<string, number>>({});
 
 	readonly currentUser = signal<CurrentUser | null>(null);
 	readonly isAdminUser = computed(() => this.currentUser()?.isAdmin === true);
@@ -150,8 +152,16 @@ export class Users {
 		if (!userId) {
 			return '/avatar';
 		}
-		return `${this.baseUrl}/${userId}/avatar`;
+		const version = this.avatarVersions()[userId];
+    return `${this.baseUrl}/${userId}/avatar${version ? `?v=${version}` : ''}`;
 	}
+
+  updateAvatar(userId: string, file: File) {
+    const body = new FormData();
+    body.append('file', file);
+    return this.http.patch<{ objectAvatarKey: string }>(`${this.baseUrl}/${userId}/avatar`, body, { withCredentials: true })
+      .pipe(tap(() => this.avatarVersions.update(versions => ({ ...versions, [userId]: (versions[userId] ?? 0) + 1 }))));
+  }
 
 	update(userId: string, changes: PatchUser) {
 		const url = `${this.baseUrl}/${userId}`;
