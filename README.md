@@ -12,13 +12,14 @@ Users upload documents into groups. Every upload is analysed in the background: 
 
 - **Accounts and sessions:** sign-up and login with server-side sessions in Redis, forced password change on first login, login attempt lockout, optional two-factor authentication with an authenticator app, profile with avatar and language.
 - **Groups as organizations:** administrators create groups, add and remove members, and grant permissions per user and group.
-- **Permissions:** `documents.read`, `documents.upload`, `documents.update` and `documents.delete` are checked per group on every document route and in the AI retrieval. Administration views are only available to admins.
+- **Permissions:** `documents.read`, `documents.upload`, `documents.update` and `documents.delete` are checked per group on every document route and in the AI retrieval. `notifications.manage` controls who may create and change reminders. Administration views are only available to admins.
 - **Document management:** validated upload (file type, real content type, size limit), listing, preview, download, rename, move to another group, delete.
 - **AI analysis:** text extraction from PDF, images (OCR in German, English and Spanish), DOCX, ODT, XLSX, XLS, CSV, Markdown and plain text; language detection, summary and tag suggestions with confidence values.
 - **Review:** AI tag suggestions are confirmed or corrected by the user, failed analyses can be restarted.
 - **Tags:** hierarchical tags in two facets (`domain`, `doctype`), maintained by admins.
 - **Advanced search:** search terms over filename, tags, summary, uploader, group and extracted text with relevance ranking and highlighted snippets; filters for group, tag, file type and date range; sorting and pagination.
 - **Document chat (RAG):** conversations with history, answers with confidence score and source documents, restricted to readable documents.
+- **Reminders by email:** due dates found in documents (for example invoice deadlines) become reminders that are sent by email to the group members who can read the document. Reminders can also be created manually, and every user can switch the emails off in the profile.
 - **Internationalization:** English, German and Spanish user interface.
 - **Monitoring:** Prometheus metrics for both backends and all containers, Grafana dashboards.
 - **Deployment:** one command, HTTPS through Caddy, internal services not reachable from outside.
@@ -46,6 +47,7 @@ Edit `env/.env` before the first start:
 - Set the database credentials, the seeded administrator account (`ADMIN_USER`, `ADMIN_USER_PASSWORD`), the MinIO credentials, the Grafana admin password and a strong `AI_SERVICE_API_KEY`.
 - Set `TOTP_ENCRYPTION_KEY` to your own value, generated with `openssl rand -base64 32`. It encrypts the two-factor secrets in the database; if it changes, users have to set up two-factor authentication again.
 - `LLM_PROVIDER=ollama` keeps generation local. `openrouter` requires a valid `OPENROUTER_API_KEY` and sends analysis content to the external provider. Embeddings always use Ollama.
+- Reminder emails use `SMTP_HOST`, `SMTP_PORT` and `MAIL_FROM`. The defaults point to the bundled Mailpit test server, which catches all mails instead of delivering them. The mail client has no TLS and no login, so a real mail provider is not supported yet.
 - Leave `LANGFUSE_ENABLED=false` unless a separately configured Langfuse instance is available.
 
 ### Start
@@ -79,6 +81,7 @@ It adds `docker-compose.dev.yml` on top: source directories are mounted, NestJS,
 | Swagger documentation | https://localhost/api/docs | prod and dev |
 | Grafana | https://localhost/grafana | prod and dev |
 | Prometheus | http://127.0.0.1:9090 | prod and dev |
+| Mailpit (caught reminder emails) | http://127.0.0.1:8025 | prod and dev |
 | NestJS API, direct | http://127.0.0.1:3000 | dev only |
 | MinIO console | http://127.0.0.1:9001 | dev only |
 | Adminer | http://127.0.0.1:8080 | dev only |
@@ -134,7 +137,7 @@ make test
 | --- | --- | --- |
 | ghambrec | Product Owner, Technical Lead, Developer | Document frontend (list, upload, preview, review, search, tags), AI ingestion pipeline, Docker and HTTPS infrastructure |
 | nluchini | Technical Lead, Developer | NestJS foundation, authentication and sessions, documents and storage backend, tags, permissions, CI and end-to-end tests |
-| poverbec | Project Manager, Developer | User management backend and frontend, profile, RAG retrieval and conversations, chat frontend, monitoring |
+| poverbec | Project Manager, Developer | User management backend and frontend, profile, RAG retrieval and conversations, chat frontend, monitoring, reminder emails (notification system) |
 | cbauer | Developer | Groups and memberships backend and frontend, profile and login views |
 
 ## Project Management
@@ -156,6 +159,7 @@ The team met regularly to plan, review progress and split the work by topic. Tas
 | Object storage | MinIO (S3-compatible) | Keeps file bytes out of the database and is self-hostable |
 | Sessions and queue | Redis | Server-side sessions that can be revoked, and the job queue for the worker |
 | Models | Ollama, optional OpenRouter | Documents stay on the own machine by default; an external provider can be enabled on purpose |
+| Mail | aiosmtplib, Mailpit | Reminder emails are sent asynchronously from the worker; Mailpit catches them during development |
 | Reverse proxy | Caddy | HTTPS with automatic certificates, serves the Angular build, forwards `/api` and `/grafana` |
 | Monitoring | Prometheus, Grafana, cAdvisor, node-exporter | Metrics of the applications, the containers and the host in one place |
 | Orchestration | Docker Compose, Make | The whole stack starts with one command |
@@ -178,9 +182,10 @@ flowchart TD
     Worker --> Ollama[Ollama: generation and embeddings]
     AI --> Ollama
     Worker -. optional .-> OpenRouter[OpenRouter]
+    Worker -- reminder emails --> Mailpit[Mailpit: SMTP test server]
 ```
 
-Caddy is the only entry point. The browser talks HTTPS to Caddy; connections behind it are plain HTTP inside Docker networks. The stack uses three networks: `edge` (Caddy, NestJS, Grafana), `backend` (NestJS, AI service, worker, PostgreSQL, Redis, MinIO, Ollama) and `monitoring` (Prometheus, Grafana, exporters and the two metric targets). Caddy therefore cannot reach the database or the AI service. The AI service is called by NestJS only and expects an API key.
+Caddy is the only entry point. The browser talks HTTPS to Caddy; connections behind it are plain HTTP inside Docker networks. The stack uses three networks: `edge` (Caddy, NestJS, Grafana), `backend` (NestJS, AI service, worker, PostgreSQL, Redis, MinIO, Ollama, Mailpit) and `monitoring` (Prometheus, Grafana, exporters and the two metric targets). Caddy therefore cannot reach the database or the AI service. The AI service is called by NestJS only and expects an API key.
 
 Frontend and API share one origin, so CORS is not enabled. The session cookie is `HttpOnly`, `Secure` and `SameSite=Lax`. Passwords are stored as bcrypt hashes.
 
@@ -193,6 +198,9 @@ Two-factor authentication uses time-based one-time passwords (TOTP, RFC 6238). T
 3. The AI service creates the analysis record and queues a job. The worker loads the file, extracts the text, detects the language and requests a summary and tags from the model.
 4. The text is split into overlapping chunks. Ollama creates 1,024-dimensional embeddings, which are stored with the chunks and indexed with HNSW.
 5. The status is tracked as `PENDING`, `PROCESSING`, `FINISHED`, `FAILED` or `SKIPPED` and shown in the document list.
+6. The analysis also extracts up to three genuine action deadlines, such as an invoice due date. Past dates and invoices marked as paid are ignored. Each deadline becomes a reminder, by default three days before the due date at 08:00 (Europe/Berlin). A new analysis replaces the AI reminders of that document; manually created ones stay.
+
+Every five minutes the worker sends the due reminders by email to all active users who hold `documents.read` in one of the document's groups and have not switched reminder emails off. A failed delivery is retried after five minutes. Creating, changing and deleting reminders requires `documents.read` and `notifications.manage` in a group of the document. Administrators can trigger the delivery immediately through `POST /notifications/send-due` of the AI service.
 
 For a chat question, the AI service embeds the question, searches the chunks of documents for which the user holds `documents.read` in the document's group, builds the context within a fixed budget and lets the model answer with a confidence score. The answer is stored with its source chunks.
 
@@ -221,11 +229,13 @@ erDiagram
     ai_conversations ||--o{ ai_messages : "contains"
     ai_messages ||--o{ ai_message_sources : "cites"
     ai_chunks ||--o{ ai_message_sources : "cited in"
+    documents ||--o{ ai_notifications : "has reminders"
+    ai_notifications ||--o{ ai_notification_reminders : "scheduled as"
 ```
 
 | Table | Key fields | Purpose |
 | --- | --- | --- |
-| `users` | `id` uuid, `email` varchar unique, `password_hash` varchar, `display_name` varchar, `avatar_object_key` varchar, `preferred_language` varchar, `is_active` boolean, `must_change_password` boolean, `totp_secret` varchar, `totp_enabled` boolean, `last_login_at`, `deleted_at` timestamptz | Accounts; deletion is a soft delete and can be reverted |
+| `users` | `id` uuid, `email` varchar unique, `password_hash` varchar, `display_name` varchar, `avatar_object_key` varchar, `preferred_language` varchar, `is_active` boolean, `must_change_password` boolean, `totp_secret` varchar, `totp_enabled` boolean, `notification_active` boolean, `last_login_at`, `deleted_at` timestamptz | Accounts; deletion is a soft delete and can be reverted |
 | `groups` | `id` uuid, `name` varchar unique, `description` varchar, `is_system` boolean | Organizations (household, club); the system group `admin` holds the administrators |
 | `user_groups` | `user_id`, `group_id` uuid (composite key), `invited_by` uuid, `joined_at` timestamptz | Group membership |
 | `permissions` | `id` uuid, `perm_key` varchar unique, `description` varchar | Available permission keys |
@@ -240,6 +250,8 @@ erDiagram
 | `ai_conversations` | `id` uuid, `user_id` uuid, `title` varchar(255) | Chat conversations |
 | `ai_messages` | `id` uuid, `conv_id` uuid, `sender` varchar(10), `content` text | Questions and answers |
 | `ai_message_sources` | `message_id`, `chunk_id` uuid (composite key), `similiary_score` real | Chunks an answer is based on |
+| `ai_notifications` | `id` uuid, `document_id` uuid, `source` varchar(10) (`ai` or `manual`), `title` varchar(255), `message` text, `due_date` date, `created_by` uuid | Reminders of a document, shared by all readers |
+| `ai_notification_reminders` | `id` uuid, `ai_notification_id` uuid, `remind_at` timestamptz, `sent_at`, `skipped_at`, `next_attempt_at` timestamptz, `error_key`, `error_detail` text | Delivery state of a reminder, including retries |
 
 ## Features List
 
@@ -259,6 +271,7 @@ erDiagram
 | Advanced search | Ranked full-text search with snippets, filters, sorting, pagination, trigram indexes | ghambrec |
 | Document chat | Permission-aware retrieval, generation with sources and confidence, conversation history | poverbec, ghambrec |
 | Chat interface | Conversation list, messages, sources, rename and delete | poverbec |
+| Reminders by email | Deadline extraction during analysis, manual reminders, reminder list and document view, scheduled email delivery with retry, opt-out in the profile, `notifications.manage` permission | poverbec |
 | Internationalization | English, German and Spanish translations, language stored per user | ghambrec, poverbec |
 | Monitoring | Metrics endpoints, Prometheus, provisioned Grafana data source and dashboards, cAdvisor, node-exporter, service availability alert | poverbec |
 | CI and tests | GitHub Actions, end-to-end test stack | nluchini |
@@ -280,7 +293,9 @@ erDiagram
 | Advanced search | Minor | 1 | Filters, sorting, pagination, ranking and highlighting | ghambrec |
 | Multiple languages | Minor | 1 | English, German, Spanish with Transloco | ghambrec, poverbec |
 | Two-factor authentication (2FA) | Minor | 1 | TOTP with authenticator app, setup with QR code in the profile, code step at login | ghambrec |
-| **Total** | | **19** | | |
+| Notification system | Minor | 1 | Deadlines extracted from documents and manual reminders, scheduled email delivery with retry, reminder list and document view, opt-out in the profile, `notifications.manage` permission | poverbec |
+| Support for different browsers | Minor | 1 | Standard Angular build for the current versions of Chrome, Edge, Firefox and Safari, no browser-specific code | all |
+| **Total** | | **21** | | |
 
 ### Justification per module
 
@@ -298,12 +313,14 @@ We chose these modules because they describe what a document archive for several
 - **Advanced search (Minor):** An archive is only useful if documents can be found again. Ranked search over metadata and extracted text, with filters, sorting and pagination, covers the cases that plain tag browsing does not.
 - **Multiple languages (Minor):** Our users and OCR documents are German, English and Spanish, so the interface and the analysis language support need to match.
 - **Two-factor authentication (Minor):** The archive holds contracts, invoices and insurance papers, so a stolen password should not be enough to read them. TOTP works with any authenticator app, needs no SMS or mail service and fits a self-hosted installation.
+- **Notification system (Minor):** Documents carry deadlines, such as invoice due dates or contract cancellation periods, that are easy to miss in an archive. The AI analysis extracts them, users can add their own, and an email goes out to the group members who can read the document, with a retry on failure and an opt-out per user. Creating and changing reminders is bound to its own permission, `notifications.manage`.
+- **Support for different browsers (Minor):** Household and club members use whatever browser they have, so the interface must not depend on one. The frontend is a standard Angular build without browser-specific code and targets the current versions of Chrome, Edge, Firefox and Safari.
 
 ## Individual Contributions
 
 - **ghambrec:** document frontend (list, upload, preview, detail, review, search, tags), search backend, AI ingestion pipeline (worker, extraction, analysis, chunking, embeddings), review endpoints, two-factor authentication, Docker setup with Caddy, HTTPS and network separation.
 - **nluchini:** NestJS project setup, authentication and session handling, documents module with validation and MinIO storage, tags and permissions backend, TypeORM migrations, GitHub Actions and the end-to-end test environment.
-- **poverbec:** user management backend and frontend, profile page, retrieval and conversation logic in the AI service, chat interface, Prometheus and Grafana monitoring.
+- **poverbec:** user management backend and frontend, profile page, retrieval and conversation logic in the AI service, chat interface, Prometheus and Grafana monitoring, notification system (deadline extraction, reminder emails, reminder views).
 - **cbauer:** groups and group membership in backend and frontend, permission editor, login and profile views.
 
 ### Challenges and solutions
