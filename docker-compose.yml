@@ -88,6 +88,8 @@ services:
      redis:
        condition: service_healthy
        restart: true
+     minio-init:
+       condition: service_completed_successfully
     #  ai-service:
     #    condition: service_healthy
 
@@ -186,7 +188,6 @@ services:
 
   grafana: 
     image: grafana/grafana
-    profiles: [monitoring]
     volumes:
     - grafana_data:/var/lib/grafana
     - ./monitoring/grafana/provisioning:/etc/grafana/provisioning:ro
@@ -202,18 +203,17 @@ services:
 
   prometheus:
     image: prom/prometheus:latest
-    profiles: [monitoring]
     ports:
       - "127.0.0.1:9090:9090"
     volumes:
       - ./monitoring/prometheus.yml:/etc/prometheus/prometheus.yml:ro
+      - ./monitoring/alerts.yml:/etc/prometheus/alerts.yml:ro
       - prometheus_data:/prometheus
     networks:
       - monitoring
 
   cadvisor:
     image: ghcr.io/google/cadvisor:0.55.1
-    profiles: [monitoring]
     privileged: true
     devices:
       - /dev/kmsg:/dev/kmsg
@@ -228,7 +228,6 @@ services:
 
   node-exporter:
     image: quay.io/prometheus/node-exporter:latest
-    profiles: [monitoring]
     pid: host
     command:
       - "--path.rootfs=/host"

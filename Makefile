@@ -1,7 +1,4 @@
 COMPOSE := docker compose -f ./docker-compose.yml
-COMPOSE_DEV := ${COMPOSE} -f ./docker-compose.dev.yml
-# all services of prod and dev, used for cleanup
-COMPOSE_ALL := ${COMPOSE_DEV} --profile monitoring
 COMPOSE_TEST := docker compose -p documents-system-test -f ./docker-compose.test.yml
 PNPM := pnpm
 
@@ -9,27 +6,19 @@ NEST_DIR := backend/nest-server
 FRONT_DIR := frontend
 
 
-# --- prod ---
+# --- application and monitoring ---
 up:
-	${COMPOSE} --profile monitoring up --build
-
-# --- dev (hot reload, local ports) ---
-dev:
-	${COMPOSE_DEV} --profile monitoring up
-
-monitoring:
-	${COMPOSE} --profile monitoring up -d \
-	grafana prometheus cadvisor node-exporter
+	${COMPOSE} up --build
 
 # --- cleanup ---
 down:
-	${COMPOSE_ALL} down --remove-orphans
+	${COMPOSE} down --remove-orphans
 
 clean:
-	${COMPOSE_ALL} down --remove-orphans --rmi all
+	${COMPOSE} down --remove-orphans --rmi all
 
 fclean:
-	${COMPOSE_ALL} down --remove-orphans -v --rmi all
+	${COMPOSE} down --remove-orphans -v --rmi all
 
 re:
 	$(MAKE) clean
@@ -63,5 +52,5 @@ build-front:
 	cd $(FRONT_DIR) && $(PNPM) run build
 
 
-.PHONY: up dev monitoring down clean fclean re unit test test-clean \
+.PHONY: up down clean fclean re unit test test-clean \
 	deps-nest deps-front build-nest build-front
