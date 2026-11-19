@@ -3,12 +3,7 @@
 
     <div class="row align-items-center mb-4">
       <div class="col-12 col-md-3 text-center">
-        <div class="avatar-wrapper">
-          <img
-            [src]="avatarUrl()"
-            class="avatar"
-            (error)="avatarError.emit($event)">
-        </div>
+        <app-profile-avatar [userId]="profile().id" [avatarUrl]="avatarUrl()" (avatarError)="avatarError.emit($event)" />
       </div>
 
       <div class="col-12 col-md-8 account-information">

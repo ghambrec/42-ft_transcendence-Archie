@@ -8,6 +8,7 @@ import { SUPPORTED_LANGUAGE_PATTERN } from '../../core/i18n/supported-language';
 import { DISPLAY_NAME_MAX_LENGTH } from '../../validation/display-name-policy';
 import { Users, type EditUserForm, type PatchUser } from '../../users/users';
 import type { ProfileUser } from '../profile';
+import { ProfileAvatar } from '../profile-avatar/profile-avatar';
 
 const LANGUAGE_LABEL_KEYS: Readonly<Record<string, string>> = {
   en: 'profile.edit.english',
@@ -21,7 +22,7 @@ type ProfileEditFormInput = Pick<EditUserForm, 'email' | 'displayName'> & {
 
 @Component({
   selector: 'app-profile-edit-form',
-  imports: [FormRoot, TextFormField, TranslocoPipe],
+  imports: [FormRoot, TextFormField, TranslocoPipe, ProfileAvatar],
   templateUrl: './profile-edit-form.html',
   styleUrl: './profile-edit-form.scss',
 })

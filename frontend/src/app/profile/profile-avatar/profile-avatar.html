@@ -1,0 +1,27 @@
+<section aria-labelledby="profile-avatar-heading" [attr.aria-busy]="uploading()">
+  <h2 class="h6" id="profile-avatar-heading">{{ 'profile.avatar.heading' | transloco }}</h2>
+  <div class="avatar-wrapper mb-3">
+    <img [src]="previewUrl() ?? avatarUrl()" [alt]="'profile.avatar.imageAlt' | transloco"
+      class="avatar" (error)="imageError($event)" />
+  </div>
+  <label for="profile-avatar-file" class="form-label small">{{ 'profile.avatar.choose' | transloco }}</label>
+  <input #fileInput id="profile-avatar-file" type="file" class="form-control form-control-sm" accept="image/jpeg,image/png,image/webp"
+    aria-describedby="profile-avatar-hint" [disabled]="uploading() || !userId()" (change)="selectFile($event)" />
+  <p id="profile-avatar-hint" class="form-text">{{ 'profile.avatar.hint' | transloco }}</p>
+  <div class="d-flex flex-wrap justify-content-center gap-2">
+    <button type="button" class="btn btn-sm btn-primary" data-testid="upload-avatar"
+      [disabled]="uploading() || !selectedFile() || !userId()" (click)="upload()">
+      {{ (uploading() ? 'profile.avatar.uploading' : 'profile.avatar.upload') | transloco }}
+    </button>
+    @if (selectedFile()) {
+      <button type="button" class="btn btn-sm btn-outline-secondary" data-testid="cancel-avatar"
+        [disabled]="uploading()" (click)="cancel()">{{ 'profile.avatar.cancel' | transloco }}</button>
+    }
+  </div>
+  @if (error(); as key) {
+    <div class="alert alert-danger small mt-2 mb-0" role="alert">{{ key | transloco }}</div>
+  }
+  @if (saved()) {
+    <p class="text-success small mt-2 mb-0" role="status">{{ 'profile.avatar.saved' | transloco }}</p>
+  }
+</section>

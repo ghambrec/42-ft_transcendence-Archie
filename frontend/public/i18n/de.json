@@ -478,6 +478,17 @@
 		}
 	},
 	"profile": {
+		"avatar": {
+			"heading": "Profilbild",
+			"imageAlt": "Dein Profilbild",
+			"choose": "Bild auswählen",
+			"hint": "JPG, PNG oder WebP, maximal 5 MB.",
+			"upload": "Profilbild speichern",
+			"uploading": "Wird hochgeladen…",
+			"cancel": "Abbrechen",
+			"saved": "Profilbild gespeichert.",
+			"error": "Das Profilbild konnte nicht gespeichert werden. Bitte versuche es erneut."
+		},
 		"heading": "Profil",
 		"description": "Verwalten Sie Ihre persönlichen Kontoeinstellungen.",
 		"active": "Aktiv",
@@ -546,6 +557,8 @@
 		}
 	},
 	"errors": {
+		"AVATAR_FILE_TOO_LARGE": "Das Profilbild darf höchstens 5 MB groß sein.",
+		"INVALID_AVATAR_FILE_TYPE": "Bitte wähle ein gültiges JPG-, PNG- oder WebP-Bild.",
 		"AUTH_EMAIL_ALREADY_REGISTERED": "Diese E-Mail-Adresse ist bereits registriert.",
 		"AUTH_INVALID_CREDENTIALS": "Ungültige E-Mail-Adresse oder ungültiges Passwort.",
 		"USER_NOT_FOUND": "Der Benutzer wurde nicht gefunden.",

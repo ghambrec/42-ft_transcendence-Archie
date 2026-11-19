@@ -1,4 +1,4 @@
-import { Injectable } from '@nestjs/common';
+import { Injectable, Logger } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 import { randomUUID } from 'crypto';
@@ -9,15 +9,16 @@ import { PatchAvatarResponseDto } from './dto/patch-avatar-response.dto';
 import { ApplicationException } from 'src/common/errors/application.exception';
 import { ErrorCode } from 'src/common/errors/error-code';
 import { GetAvatarResponseDto } from './dto/get-avatar-response.dto';
+import { fileTypeFromBuffer } from 'file-type';
+import { ALLOWED_AVATAR_MIME_TYPES, MAX_AVATAR_SIZE_BYTES } from './avatar.constants';
 
 const AVATARS_BUCKET = 'avatars';
-const ALLOWED_AVATAR_MIME_TYPES = ['image/jpeg', 'image/png', 'image/webp'];
-const MAX_AVATAR_SIZE_BYTES = 5 * 1024 * 1024; // 5 Mb
 const DEFAULT_AVATAR_MIME_TYPE = 'application/octet-stream';
 const MIME_TYPE_KEY = 'content-type';
 
 @Injectable()
 export class UsersFileService {
+  private readonly logger = new Logger(UsersFileService.name);
   constructor(
     @InjectRepository(User)
     private readonly usersRepository: Repository<User>,
@@ -43,11 +44,21 @@ export class UsersFileService {
     if (!file) {
       throw new ApplicationException(ErrorCode.ValidationFailed);
     }
-    if (!ALLOWED_AVATAR_MIME_TYPES.includes(file.mimetype)) {
+    if (!ALLOWED_AVATAR_MIME_TYPES.has(file.mimetype)) {
       throw new ApplicationException(ErrorCode.InvalidAvatarFileType);
     }
     if (file.size > MAX_AVATAR_SIZE_BYTES) {
       throw new ApplicationException(ErrorCode.AvatarFileTooLarge);
+    }
+
+    let detected;
+    try {
+      detected = await fileTypeFromBuffer(file.buffer);
+    } catch {
+      throw new ApplicationException(ErrorCode.InvalidAvatarFileType);
+    }
+    if (!detected || detected.mime !== file.mimetype) {
+      throw new ApplicationException(ErrorCode.InvalidAvatarFileType);
     }
 
     const user = await this.usersRepository.findOneBy({ id: userId });
@@ -70,7 +81,11 @@ export class UsersFileService {
     await this.usersRepository.update(userId, { avatarObjectKey: key });
 
     if (previousObjectKey) {
-      await this.storageService.removeObject(AVATARS_BUCKET, previousObjectKey);
+      try {
+        await this.storageService.removeObject(AVATARS_BUCKET, previousObjectKey);
+      } catch {
+        this.logger.warn('Previous avatar could not be removed after a successful replacement');
+      }
     }
 
     return { objectAvatarKey: key };
