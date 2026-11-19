@@ -62,17 +62,29 @@ Open https://localhost afterwards. Caddy issues the certificate from its own loc
 
 Monitoring is part of the default Compose stack. Grafana, Prometheus, cAdvisor and Node Exporter start automatically; no additional profile or separate start command is needed. After changing application code, run `make up` again to rebuild the images.
 
+For development use the dev stack instead:
+
+```sh
+make dev
+```
+
+It adds `docker-compose.dev.yml` on top: source directories are mounted, NestJS, the AI service, the worker and the Angular dev server restart on file changes, and some ports are published on `127.0.0.1`. Monitoring starts in this stack as well. The entry point stays https://localhost. Run `make down` before switching between the two stacks.
+
 ### Endpoints
 
-| Service | Address |
-| --- | --- |
-| Application | https://localhost |
-| NestJS API | https://localhost/api |
-| Swagger documentation | https://localhost/api/docs |
-| Grafana | https://localhost/grafana |
-| Prometheus | http://127.0.0.1:9090 |
+| Service | Address | Stack |
+| --- | --- | --- |
+| Application | https://localhost | prod and dev |
+| NestJS API | https://localhost/api | prod and dev |
+| Swagger documentation | https://localhost/api/docs | prod and dev |
+| Grafana | https://localhost/grafana | prod and dev |
+| Prometheus | http://127.0.0.1:9090 | prod and dev |
+| NestJS API, direct | http://127.0.0.1:3000 | dev only |
+| MinIO console | http://127.0.0.1:9001 | dev only |
+| Adminer | http://127.0.0.1:8080 | dev only |
+| PostgreSQL | `127.0.0.1:5432` | dev only |
 
-Only port 443 is published to the network. Prometheus is bound to `127.0.0.1` and reachable from the local machine only. PostgreSQL, Redis, MinIO, NestJS, the AI service and Ollama do not publish a host port.
+Only port 443 is published to the network. Ports bound to `127.0.0.1` are reachable from the local machine only. Redis, the MinIO API, the AI service and Ollama do not publish a host port in either stack.
 
 ### Monitoring
 
@@ -93,7 +105,7 @@ The alert resolves automatically after Prometheus can scrape the exporter again.
 ### Useful commands
 
 ```sh
-# Stop the stack; volumes are kept
+# Stop the prod or dev stack; volumes are kept
 make down
 
 # Remove containers and images; volumes are kept
@@ -250,7 +262,7 @@ erDiagram
 | Internationalization | English, German and Spanish translations, language stored per user | ghambrec, poverbec |
 | Monitoring | Metrics endpoints, Prometheus, provisioned Grafana data source and dashboards, cAdvisor, node-exporter, service availability alert | poverbec |
 | CI and tests | GitHub Actions, end-to-end test stack | nluchini |
-| Deployment | Docker Compose, Caddy with HTTPS, network separation, application and monitoring stack | ghambrec |
+| Deployment | Docker Compose, Caddy with HTTPS, network separation, prod and dev stack with monitoring | ghambrec |
 
 ## Modules
 
@@ -349,7 +361,8 @@ backend/ai-service/       FastAPI API, ARQ worker, analysis, and vector indexing
 backend/postgres-init/    PostgreSQL extension initialization
 monitoring/               Prometheus configuration and alert rules, Grafana provisioning and dashboards
 env/                      Environment templates and test configuration
-docker-compose.yml        Application and monitoring stack
+docker-compose.yml        Production stack with monitoring
+docker-compose.dev.yml    Development override (hot reload, local ports)
 docker-compose.test.yml   Backend end-to-end test infrastructure
 Makefile                  Start, cleanup, and test commands
 ```

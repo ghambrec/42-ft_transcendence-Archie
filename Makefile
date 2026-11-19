@@ -1,4 +1,5 @@
 COMPOSE := docker compose -f ./docker-compose.yml
+COMPOSE_DEV := ${COMPOSE} -f ./docker-compose.dev.yml
 COMPOSE_TEST := docker compose -p documents-system-test -f ./docker-compose.test.yml
 PNPM := pnpm
 
@@ -6,19 +7,23 @@ NEST_DIR := backend/nest-server
 FRONT_DIR := frontend
 
 
-# --- application and monitoring ---
+# --- prod (application and monitoring) ---
 up:
 	${COMPOSE} up --build
 
-# --- cleanup ---
+# --- dev (hot reload, local ports) ---
+dev:
+	${COMPOSE_DEV} up
+
+# --- cleanup (dev override included, so it covers both stacks) ---
 down:
-	${COMPOSE} down --remove-orphans
+	${COMPOSE_DEV} down --remove-orphans
 
 clean:
-	${COMPOSE} down --remove-orphans --rmi all
+	${COMPOSE_DEV} down --remove-orphans --rmi all
 
 fclean:
-	${COMPOSE} down --remove-orphans -v --rmi all
+	${COMPOSE_DEV} down --remove-orphans -v --rmi all
 
 re:
 	$(MAKE) clean
@@ -52,5 +57,5 @@ build-front:
 	cd $(FRONT_DIR) && $(PNPM) run build
 
 
-.PHONY: up down clean fclean re unit test test-clean \
+.PHONY: up dev down clean fclean re unit test test-clean \
 	deps-nest deps-front build-nest build-front
