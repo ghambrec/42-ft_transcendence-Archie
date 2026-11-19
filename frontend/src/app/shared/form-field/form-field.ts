@@ -12,7 +12,7 @@ export class TextFormField {
   readonly field = input.required<FieldTree<string>>();
   readonly inputId = input.required<string>();
   readonly labelKey = input.required<string>();
-  readonly type = input<'text' | 'email' | 'password'>('text');
+  readonly type = input<'text' | 'email' | 'password' | 'date' | 'datetime-local' | 'textarea'>('text');
   readonly autocomplete = input<string | null>(null);
   readonly hintKey = input<string | null>(null);
 

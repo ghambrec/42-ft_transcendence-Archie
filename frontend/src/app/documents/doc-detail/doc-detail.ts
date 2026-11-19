@@ -12,10 +12,11 @@ import { HttpErrorResponse } from '@angular/common/http';
 import { toErrorKey } from '../../core/error-key';
 import { TagPicker } from '../../tags/tag-picker/tag-picker';
 import { DocPreviewModal } from '../doc-preview-modal/doc-preview-modal';
+import { DocumentNotifications } from '../../notifications/document-notifications/document-notifications';
 
 @Component({
 	selector: 'app-doc-detail',
-	imports: [DatePipe, UpperCasePipe, TranslocoPipe, NgbTooltip, FileSizePipe, DocStatusBadge, TagPicker],
+	imports: [DatePipe, UpperCasePipe, TranslocoPipe, NgbTooltip, FileSizePipe, DocStatusBadge, TagPicker, DocumentNotifications],
 	templateUrl: './doc-detail.html',
 	styleUrl: './doc-detail.scss',
 	host: { '(document:keydown.escape)': 'onEscape()' }

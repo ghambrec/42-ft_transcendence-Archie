@@ -1,0 +1,24 @@
+<ul class="list-unstyled mb-0">
+  @for (reminder of reminders(); track reminder.id) {
+    <li class="border-top pt-2 mt-2 small">
+      <div class="d-flex flex-wrap justify-content-between align-items-center gap-2">
+        <span>{{ reminder.remind_at | date: 'dd.MM.yyyy, HH:mm' }}</span>
+        <span class="badge" [class]="statusClasses[reminder.status]">{{ ('notifications.status.' + reminder.status) | transloco }}</span>
+      </div>
+      @if (reminder.sent_at) {
+        <p class="text-secondary mb-0 mt-1">{{ 'notifications.sentAt' | transloco }}: {{ reminder.sent_at | date: 'dd.MM.yyyy, HH:mm' }}</p>
+      }
+      @if (reminder.skipped_at) {
+        <p class="text-secondary mb-0 mt-1">{{ 'notifications.skippedAt' | transloco }}: {{ reminder.skipped_at | date: 'dd.MM.yyyy, HH:mm' }}</p>
+      }
+      @if (reminder.status === 'failed') {
+        <p class="text-danger mb-0 mt-1">{{ (reminder.error_key === 'no_recipients' ? 'notifications.noRecipients' : 'notifications.deliveryError') | transloco }}</p>
+        @if (reminder.next_attempt_at) {
+          <p class="text-secondary mb-0 mt-1">{{ 'notifications.nextAttempt' | transloco }}: {{ reminder.next_attempt_at | date: 'dd.MM.yyyy, HH:mm' }}</p>
+        }
+      }
+    </li>
+  } @empty {
+    <li class="text-secondary small">{{ 'notifications.noReminders' | transloco }}</li>
+  }
+</ul>

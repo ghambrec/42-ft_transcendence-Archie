@@ -1,6 +1,7 @@
 """arq worker: get queued jobs from redis"""
 
 import logging
+from datetime import timezone
 from uvicorn.logging import DefaultFormatter
 
 # LOGGER SETTINGS
@@ -10,7 +11,7 @@ logging.basicConfig(level=logging.INFO, handlers=[handler])
 logger = logging.getLogger(__name__)
 
 from uuid import UUID
-from arq import func
+from arq import cron, func
 from arq.connections import RedisSettings
 
 from src.config import settings
@@ -20,7 +21,7 @@ from src.db import create_pool
 from src.ingestion import ingestor
 from src.storage.minio import MinioDocumentStore
 
-
+from src.notifications.sender import send_due_reminders
 # FUNCTIONS
 
 async def ingest_job(ctx: dict, doc_id: UUID) -> None:
@@ -47,7 +48,22 @@ async def on_shutdown(ctx: dict) -> None:
 
 
 class WorkerSettings:
-    functions = [func(ingest_job, max_tries=1)]
+    functions = [
+        func(ingest_job, max_tries=1),
+        func(send_due_reminders, max_tries=1)]
+    cron_jobs = [
+        cron(
+            send_due_reminders,
+            minute=set(range(0, 60, 5)),
+            second=0,
+            microsecond=0,
+            run_at_startup=False,
+            unique=True,
+            max_tries=1,
+        ),
+    ]
+    timezone = timezone.utc
     on_startup = on_startup
     on_shutdown = on_shutdown
     redis_settings = RedisSettings.from_dsn(settings.redis_dsn)
+

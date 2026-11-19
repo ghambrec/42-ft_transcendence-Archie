@@ -1,6 +1,46 @@
 {
+	"pagination": { "label": "Pages", "previous": "Previous", "next": "Next", "page": "Page" },
+	"notifications": {
+		"delete": {
+			"heading": "Delete reminder",
+			"submit": "Delete",
+			"pending": "Deleting…",
+			"failed": "Deletion could not be confirmed. Refresh the list and try again.",
+			"description": "The shared notification and its scheduled reminders will be deleted for everyone. Emails already sent cannot be recalled."
+		},
+		"edit": {
+			"heading": "Edit reminder",
+			"submit": "Save",
+			"pending": "Saving…",
+			"failed": "The change could not be confirmed. Please try again.",
+			"deliveryHint": "Text changes do not resend emails. Changing the reminder time to a future time schedules delivery again.",
+			"aiHint": "Changes to AI reminders are overwritten when the document is analyzed again."
+		},
+		"create": {"heading": "Create reminder", "title": "Title", "message": "Message", "remindAt": "Remind at", "localTimeHint": "Enter the time in your local time zone. This reminder is shared with eligible recipients who have enabled notifications.", "cancel": "Cancel", "submit": "Create", "pending": "Creating…", "required": "Please complete this field.", "titleTooLong": "The title must be at most 255 characters.", "invalidDate": "Enter a valid date and local time.", "failed": "The reminder could not be created. Please try again.", "permissionsError": "Your permission to create reminders could not be checked."},
+		"title": "Notifications",
+		"description": "Reminders from all documents you can currently read.",
+		"localTimes": "Times are shown in your local time zone.",
+		"sharedStatusHint": "The delivery status applies to the shared reminder, not to individual recipients.",
+		"refresh": "Refresh",
+		"loading": "Loading notifications…",
+		"loadError": "Notifications could not be loaded.",
+		"retry": "Try again",
+		"empty": "No notifications for your readable documents yet.",
+		"emptyDocument": "No notifications for this document yet.",
+		"dueDate": "Due date",
+		"reminders": "Email reminders",
+		"noReminders": "No email reminders scheduled.",
+		"sentAt": "Sent at",
+		"skippedAt": "Skipped at",
+		"nextAttempt": "Next attempt",
+		"deliveryError": "Email delivery failed. A retry is planned.",
+		"noRecipients": "No eligible recipients were available at the last attempt.",
+		"source": { "ai": "AI", "manual": "Manual" },
+		"status": { "scheduled": "Scheduled", "sent": "Sent", "skipped": "Skipped", "failed": "Failed" }
+	},
 	"programName": "Archie",
 	"pageTitle": {
+		"notifications": "Notifications",
 		"login": "Login",
 		"signup": "Sign up",
 		"privacy": "Privacy Policy",
@@ -11,6 +51,7 @@
 		"settings": "Settings"
 	},
 	"sidebar": {
+		"notifications": "Notifications",
 		"toggle": "Toggle navigation",
 		"settings": "Settings",
 		"documents": "Documents",
@@ -80,6 +121,9 @@
 			"selectGroupTooltip": "Select group for upload",
 			"maxSize": "max. {{ size }} MB per file",
 			"errors": {
+		"AI_NOTIFICATION_CONFLICT": "The notification cannot be changed right now. Refresh the list and try again.",
+		"AI_NOTIFICATION_NOT_FOUND": "The notification no longer exists. Please refresh the list.",
+		"AI_NOTIFICATION_ACCESS_DENIED": "You do not have permission to manage notifications for this document.",
 				"empty": "File is empty",
 				"tooBig": "File is too big",
 				"filetypeNotAllowed": "File type is not allowed",
@@ -466,6 +510,7 @@
 			"documentsUpload": "Upload documents",
 			"documentsUpdate": "Update documents",
 			"documentsDelete": "Delete documents",
+			"notificationsManage": "Manage shared notifications",
 			"btnCancel": "Cancel",
 			"btnSave": "Save",
 			"errors": {
@@ -475,6 +520,17 @@
 		}
 	},
 	"profile": {
+		"notifications": {
+			"heading": "Notifications",
+			"label": "Receive reminder emails",
+			"hint": "Applies to reminders from all documents you can read. Changes are saved immediately. Enabling this does not resend reminders that were already sent or permanently skipped.",
+			"loading": "Loading preference…",
+			"saving": "Saving…",
+			"saved": "Preference saved.",
+			"loadError": "The preference could not be loaded.",
+			"saveError": "Saving could not be confirmed. Please try again.",
+			"retry": "Try again"
+		},
 		"avatar": {
 			"heading": "Profile picture",
 			"imageAlt": "Your profile picture",

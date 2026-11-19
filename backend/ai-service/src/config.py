@@ -20,6 +20,14 @@ class Settings(BaseSettings):
     ai_service_api_key: str
     ai_service_reload: bool = False
 
+    # --- MAIL (development SMTP via Mailpit)
+    smtp_host: str = "mailpit"
+    smtp_port: int = Field(default=1025, ge=1, le=65535)
+    mail_from: str = "archie@example.test"
+
+    notification_batch_size: int = Field(default=50, ge=1)
+    notification_delivery_timeout_seconds: float = Field(default=60, gt=0)
+
     # --- LANGFUSE
     langfuse_enabled: bool = False
     langfuse_host: str | None = None

@@ -180,6 +180,21 @@ export class UsersService implements OnApplicationBootstrap {
     this.logger.log({ userId }, 'User restored');
   }
 
+  async getNotificationSettings(userId: string): Promise<{ active: boolean }> {
+    const user = await this.usersRepository.findOneBy({ id: userId });
+    if (!user) throw new ApplicationException(ErrorCode.UserNotFound);
+    return { active: user.notificationActive };
+  }
+
+  async updateNotificationSettings(userId: string, active: boolean): Promise<{ active: boolean }> {
+    const result = await this.usersRepository.update(
+      { id: userId, deletedAt: IsNull() },
+      { notificationActive: active },
+    );
+    if (!result.affected) throw new ApplicationException(ErrorCode.UserNotFound);
+    return { active };
+  }
+
    async updateProfile(actorUserId: string, userID: string, dto: UpdateUserDto): Promise<UpdateUserResponseDto> {
     this.logger.log('Execute updateProfile', userID);
 

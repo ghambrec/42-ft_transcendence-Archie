@@ -1,6 +1,9 @@
 
 
 export enum ErrorCode {
+    AiNotificationAccessDenied = 'AI_NOTIFICATION_ACCESS_DENIED',
+    AiNotificationNotFound = 'AI_NOTIFICATION_NOT_FOUND',
+    AiNotificationConflict = 'AI_NOTIFICATION_CONFLICT',
     AiRateLimited = 'AI_RATE_LIMITED',
     AiRequestTimeout = 'AI_REQUEST_TIMEOUT',
     AiRequestCancelled = 'AI_REQUEST_CANCELLED',

@@ -7,6 +7,12 @@ export interface ErrorDefinition{
 }
 
 export const ERROR_CATALOG ={
+  [ErrorCode.AiNotificationNotFound]: { status: HttpStatus.NOT_FOUND, message: 'Notification was not found.' },
+  [ErrorCode.AiNotificationConflict]: { status: HttpStatus.CONFLICT, message: 'The notification cannot be changed right now. Refresh the list and try again.' },
+  [ErrorCode.AiNotificationAccessDenied]: {
+    status: HttpStatus.FORBIDDEN,
+    message: 'You are not allowed to manage reminders for this document.',
+  },
   [ErrorCode.AiRateLimited]: { status: HttpStatus.TOO_MANY_REQUESTS, message: 'Too many chat requests. Please wait before trying again.' },
   [ErrorCode.AiRequestTimeout]: { status: HttpStatus.GATEWAY_TIMEOUT, message: 'The chat request timed out.' },
   [ErrorCode.AiRequestCancelled]: { status: HttpStatus.REQUEST_TIMEOUT, message: 'The chat request was cancelled.' },

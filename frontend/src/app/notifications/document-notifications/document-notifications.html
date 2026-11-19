@@ -1,0 +1,19 @@
+<section>
+  <div class="d-flex flex-wrap align-items-center justify-content-between gap-2 mb-2">
+    <h3 class="h6 mb-0">{{ 'notifications.title' | transloco }}</h3>
+    @if (canManage()) {
+      <button type="button" class="btn btn-sm btn-outline-primary" data-testid="create-notification"
+        [disabled]="dialogOpen()" (click)="openCreate()">
+        <i class="bi bi-plus-lg me-1" aria-hidden="true"></i>{{ 'notifications.create.heading' | transloco }}
+      </button>
+    }
+  </div>
+  @if (memberships.error()) {
+    <div class="alert alert-warning py-2 small" role="alert">
+      {{ 'notifications.create.permissionsError' | transloco }}
+      <button type="button" class="btn btn-sm btn-link" (click)="memberships.reload()">{{ 'notifications.retry' | transloco }}</button>
+    </div>
+  }
+  <app-notification-list #list [documentId]="document().id" [showDocumentLinks]="false"
+    [canManage]="canManage()" (edit)="openCreate($event)" (remove)="openDelete($event)" />
+</section>

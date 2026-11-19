@@ -1,6 +1,46 @@
 {
+	"pagination": { "label": "Seitennavigation", "previous": "Zurück", "next": "Weiter", "page": "Seite" },
+	"notifications": {
+		"delete": {
+			"heading": "Erinnerung löschen",
+			"submit": "Löschen",
+			"pending": "Wird gelöscht…",
+			"failed": "Das Löschen konnte nicht bestätigt werden. Bitte aktualisiere die Liste und versuche es erneut.",
+			"description": "Die gemeinsame Benachrichtigung und ihre geplanten Erinnerungen werden für alle gelöscht. Bereits versendete E-Mails können nicht zurückgerufen werden."
+		},
+		"edit": {
+			"heading": "Erinnerung bearbeiten",
+			"submit": "Speichern",
+			"pending": "Wird gespeichert…",
+			"failed": "Die Änderung konnte nicht bestätigt werden. Bitte versuche es erneut.",
+			"deliveryHint": "Textänderungen lösen keinen erneuten Versand aus. Ein geänderter zukünftiger Erinnerungszeitpunkt plant den Versand erneut.",
+			"aiHint": "Änderungen an KI-Erinnerungen werden bei erneuter Dokumentanalyse überschrieben."
+		},
+		"create": {"heading": "Erinnerung erstellen", "title": "Titel", "message": "Nachricht", "remindAt": "Erinnern am", "localTimeHint": "Die Eingabe gilt in deiner lokalen Zeitzone. Die Erinnerung ist gemeinsam für berechtigte Empfänger mit aktivierten Benachrichtigungen.", "cancel": "Abbrechen", "submit": "Erstellen", "pending": "Wird erstellt…", "required": "Bitte fülle dieses Feld aus.", "titleTooLong": "Der Titel darf höchstens 255 Zeichen enthalten.", "invalidDate": "Bitte gib ein gültiges Datum und eine gültige lokale Uhrzeit ein.", "failed": "Die Erinnerung konnte nicht erstellt werden. Bitte versuche es erneut.", "permissionsError": "Die Berechtigung zum Erstellen konnte nicht geprüft werden."},
+		"title": "Benachrichtigungen",
+		"description": "Erinnerungen aus allen Dokumenten, die du aktuell lesen darfst.",
+		"localTimes": "Zeiten werden in deiner lokalen Zeitzone angezeigt.",
+		"sharedStatusHint": "Der Versandstatus gilt für die gemeinsame Erinnerung, nicht für einzelne Empfänger.",
+		"refresh": "Aktualisieren",
+		"loading": "Benachrichtigungen werden geladen…",
+		"loadError": "Benachrichtigungen konnten nicht geladen werden.",
+		"retry": "Erneut versuchen",
+		"empty": "Noch keine Benachrichtigungen für deine lesbaren Dokumente.",
+		"emptyDocument": "Noch keine Benachrichtigungen für dieses Dokument.",
+		"dueDate": "Fälligkeit",
+		"reminders": "E-Mail-Erinnerungen",
+		"noReminders": "Keine E-Mail-Erinnerungen geplant.",
+		"sentAt": "Versendet am",
+		"skippedAt": "Übersprungen am",
+		"nextAttempt": "Nächster Versuch",
+		"deliveryError": "Der E-Mail-Versand ist fehlgeschlagen. Ein neuer Versuch ist geplant.",
+		"noRecipients": "Beim letzten Versuch waren keine berechtigten Empfänger verfügbar.",
+		"source": { "ai": "KI", "manual": "Manuell" },
+		"status": { "scheduled": "Geplant", "sent": "Versendet", "skipped": "Übersprungen", "failed": "Fehlgeschlagen" }
+	},
 	"programName": "Archie",
 	"pageTitle": {
+		"notifications": "Benachrichtigungen",
 		"login": "Anmelden",
 		"signup": "Registrieren",
 		"privacy": "Datenschutzerklärung",
@@ -11,6 +51,7 @@
 		"settings": "Einstellungen"
 	},
 	"sidebar": {
+		"notifications": "Benachrichtigungen",
 		"toggle": "Navigation ein-/ausklappen",
 		"settings": "Einstellungen",
 		"documents": "Dokumente",
@@ -80,6 +121,9 @@
 			"selectGroupTooltip": "Gruppe für den Upload auswählen",
 			"maxSize": "max. {{ size }} MB pro Datei",
 			"errors": {
+		"AI_NOTIFICATION_CONFLICT": "Die Benachrichtigung kann gerade nicht geändert werden. Bitte aktualisiere die Liste und versuche es erneut.",
+		"AI_NOTIFICATION_NOT_FOUND": "Die Benachrichtigung existiert nicht mehr. Bitte aktualisiere die Liste.",
+		"AI_NOTIFICATION_ACCESS_DENIED": "Du darfst für dieses Dokument keine Benachrichtigungen verwalten.",
 				"empty": "Die Datei ist leer",
 				"tooBig": "Die Datei ist zu groß",
 				"filetypeNotAllowed": "Dieser Dateityp ist nicht erlaubt",
@@ -469,6 +513,7 @@
 			"documentsUpload": "Dokumente hochladen",
 			"documentsUpdate": "Dokumente aktualisieren",
 			"documentsDelete": "Dokumente löschen",
+			"notificationsManage": "Gemeinsame Benachrichtigungen verwalten",
 			"btnCancel": "Abbrechen",
 			"btnSave": "Speichern",
 			"errors": {
@@ -478,6 +523,17 @@
 		}
 	},
 	"profile": {
+		"notifications": {
+			"heading": "Benachrichtigungen",
+			"label": "Erinnerungsmails erhalten",
+			"hint": "Gilt für Erinnerungen aus allen Dokumenten, die du lesen darfst. Änderungen werden sofort gespeichert. Bereits versendete oder endgültig übersprungene Erinnerungen werden durch das Aktivieren nicht erneut verschickt.",
+			"loading": "Einstellung wird geladen…",
+			"saving": "Wird gespeichert…",
+			"saved": "Einstellung gespeichert.",
+			"loadError": "Die Einstellung konnte nicht geladen werden.",
+			"saveError": "Das Speichern konnte nicht bestätigt werden. Bitte versuche es erneut.",
+			"retry": "Erneut versuchen"
+		},
 		"avatar": {
 			"heading": "Profilbild",
 			"imageAlt": "Dein Profilbild",

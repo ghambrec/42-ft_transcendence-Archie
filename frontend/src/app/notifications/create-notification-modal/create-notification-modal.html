@@ -1,0 +1,34 @@
+<div class="modal-header">
+  <h2 class="modal-title fs-5" id="create-notification-title">{{ (notification() ? 'notifications.edit.heading' : 'notifications.create.heading') | transloco }}</h2>
+  <button type="button" class="btn-close" [attr.aria-label]="'notifications.create.cancel' | transloco"
+    [disabled]="notificationForm().submitting()" (click)="activeModal.dismiss()"></button>
+</div>
+<div class="modal-body">
+  <p class="text-secondary text-break">{{ document()?.filename }}</p>
+  <form [formRoot]="notificationForm">
+    <fieldset [disabled]="notificationForm().submitting()">
+      <app-form-field inputId="notification-title" labelKey="notifications.create.title" [field]="notificationForm.title" />
+      <app-form-field inputId="notification-message" type="textarea" labelKey="notifications.create.message" [field]="notificationForm.message" />
+      <app-form-field inputId="notification-dueDate" type="date" labelKey="notifications.dueDate" [field]="notificationForm.dueDate" />
+      @if (canEditReminder()) {
+        <app-form-field inputId="notification-remindAt" type="datetime-local" labelKey="notifications.create.remindAt"
+          hintKey="notifications.create.localTimeHint" [field]="notificationForm.remindAt" />
+      }
+      @if (notification()) {
+        <p class="small text-secondary">{{ 'notifications.edit.deliveryHint' | transloco }}</p>
+        @if (notification()?.source === 'ai') {
+          <p class="small text-secondary">{{ 'notifications.edit.aiHint' | transloco }}</p>
+        }
+      }
+      @if (notificationForm().errors()[0]?.message; as key) {
+        <div class="alert alert-danger" role="alert">{{ key | transloco }}</div>
+      }
+      <div class="d-flex justify-content-end gap-2">
+        <button type="button" class="btn btn-secondary" (click)="activeModal.dismiss()">{{ 'notifications.create.cancel' | transloco }}</button>
+        <button type="submit" class="btn btn-primary" [disabled]="notificationForm().submitting()">
+          {{ (notificationForm().submitting() ? 'notifications.edit.pending' : notification() ? 'notifications.edit.submit' : 'notifications.create.submit') | transloco }}
+        </button>
+      </div>
+    </fieldset>
+  </form>
+</div>

@@ -46,6 +46,10 @@ export interface UpdateUserResponse {
 	id: string; 
 }
 
+export interface NotificationSettings {
+  active: boolean;
+}
+
 export interface UserInfo {
 	id: string;
 	email: string;
@@ -128,6 +132,10 @@ export class Users {
 		const url = `${this.baseUrl}/me`;
 		return this.http.get<CurrentUser>(url, { withCredentials: true });
 	}
+
+  updateNotificationSettings(active: boolean) {
+    return this.http.patch<NotificationSettings>(`${this.baseUrl}/me/notification`, { active }, { withCredentials: true });
+  }
 
 	create(body: CreateUserRequest) {
 		const url = `${this.baseUrl}/create`;
