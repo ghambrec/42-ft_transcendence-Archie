@@ -31,7 +31,7 @@ Users upload documents into groups. Every upload is analysed in the background: 
 - Docker Engine with Docker Compose v2.24 or newer.
 - GNU Make.
 - Internet access for the first start (image builds, dependency installation, model downloads).
-- Free port 443.
+- Free port 8443.
 - Enough RAM and disk space for the configured Ollama models.
 
 ### Configure
@@ -60,7 +60,7 @@ make
 
 NestJS waits for `minio-init` to finish successfully before starting, so the storage initialization runs before the application creates default profile avatars.
 
-Open https://localhost afterwards. Caddy issues the certificate from its own local authority, so the browser shows a certificate warning that has to be accepted once. Log in with the administrator account from `env/.env`; the application asks for a new password on the first login.
+Open https://localhost:8443 afterwards. Caddy issues the certificate from its own local authority, so the browser shows a certificate warning that has to be accepted once. Log in with the administrator account from `env/.env`; the application asks for a new password on the first login.
 
 Monitoring is part of the default Compose stack. Grafana, Prometheus, cAdvisor and Node Exporter start automatically; no additional profile or separate start command is needed. After changing application code, run `make up` again to rebuild the images.
 
@@ -70,16 +70,16 @@ For development use the dev stack instead:
 make dev
 ```
 
-It adds `docker-compose.dev.yml` on top: source directories are mounted, NestJS, the AI service, the worker and the Angular dev server restart on file changes, and some ports are published on `127.0.0.1`. Monitoring starts in this stack as well. The entry point stays https://localhost. Run `make down` before switching between the two stacks.
+It adds `docker-compose.dev.yml` on top: source directories are mounted, NestJS, the AI service, the worker and the Angular dev server restart on file changes, and some ports are published on `127.0.0.1`. Monitoring starts in this stack as well. The entry point stays https://localhost:8443. Run `make down` before switching between the two stacks.
 
 ### Endpoints
 
 | Service | Address | Stack |
 | --- | --- | --- |
-| Application | https://localhost | prod and dev |
-| NestJS API | https://localhost/api | prod and dev |
-| Swagger documentation | https://localhost/api/docs | prod and dev |
-| Grafana | https://localhost/grafana | prod and dev |
+| Application | https://localhost:8443 | prod and dev |
+| NestJS API | https://localhost:8443/api | prod and dev |
+| Swagger documentation | https://localhost:8443/api/docs | prod and dev |
+| Grafana | https://localhost:8443/grafana | prod and dev |
 | Prometheus | http://127.0.0.1:9090 | prod and dev |
 | Mailpit (caught reminder emails) | http://127.0.0.1:8025 | prod and dev |
 | NestJS API, direct | http://127.0.0.1:3000 | dev only |
@@ -87,7 +87,7 @@ It adds `docker-compose.dev.yml` on top: source directories are mounted, NestJS,
 | Adminer | http://127.0.0.1:8080 | dev only |
 | PostgreSQL | `127.0.0.1:5432` | dev only |
 
-Only port 443 is published to the network. Ports bound to `127.0.0.1` are reachable from the local machine only. Redis, the MinIO API, the AI service and Ollama do not publish a host port in either stack.
+Only port 8443 is published to the network (mapped to port 443 of the Caddy container, since binding ports below 1024 is not allowed on some machines). Ports bound to `127.0.0.1` are reachable from the local machine only. Redis, the MinIO API, the AI service and Ollama do not publish a host port in either stack.
 
 ### Monitoring
 

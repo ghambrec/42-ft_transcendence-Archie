@@ -207,7 +207,7 @@ services:
     env_file:
       - "./env/.env"
     environment:
-      GF_SERVER_ROOT_URL: https://localhost/grafana/
+      GF_SERVER_ROOT_URL: https://localhost:8443/grafana/
       GF_SERVER_SERVE_FROM_SUB_PATH: "true"
 
   prometheus:
