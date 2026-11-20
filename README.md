@@ -334,7 +334,7 @@ We chose these modules because they describe what a document archive for several
 - **ghambrec:** document frontend (list, upload, preview, detail, review, search, tags), search backend, AI ingestion pipeline (worker, extraction, analysis, chunking, embeddings), review endpoints, two-factor authentication, Docker setup with Caddy, HTTPS and network separation.
 - **nluchini:** NestJS project setup, authentication and session handling, documents module with validation and MinIO storage, tags and permissions backend, TypeORM migrations, GitHub Actions and the end-to-end test environment.
 - **poverbec:** user management backend and frontend, profile page, retrieval and conversation logic in the AI service, chat interface, Prometheus and Grafana monitoring, notification system (deadline extraction, reminder emails, reminder views).
-- **cbauer:** groups and group membership in backend and frontend, permission editor, login and profile views.
+- **cbauer:** groups and group membership in backend and frontend, permission editor, login and profile views and also the setting page including setting stuff for the admin.
 
 ### Challenges and solutions
 
