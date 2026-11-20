@@ -93,6 +93,19 @@ Only port 8443 is published to the network (mapped to port 443 of the Caddy cont
 
 Log in to Grafana with `GF_SECURITY_ADMIN_USER` and `GF_SECURITY_ADMIN_PASSWORD` from `env/.env`. The Prometheus data source and the dashboards in the **Archi** folder are provisioned automatically from `monitoring/grafana/`, including on a fresh installation. Edit their repository files to make persistent changes.
 
+The dashboard **Archi – Resources and Chat Performance** shows:
+
+| Panel | Source | Metric |
+|---|---|---|
+| CPU per container | cAdvisor | `container_cpu_usage_seconds_total` |
+| RAM per container | cAdvisor | `container_memory_working_set_bytes` |
+| Machine CPU | Node Exporter | `node_cpu_seconds_total` |
+| Available machine RAM | Node Exporter | `node_memory_MemAvailable_bytes` |
+| Chat request duration (mean, P95) | NestJS `/metrics` | `archie_chat_request_duration_seconds`: full chat request including the AI service call and failed requests |
+| AI stages (mean duration) | AI service `/metrics` | `archie_ai_stage_duration_seconds{stage}`: `embedding`, `retrieval`, `generation` |
+
+Document ingestion and the worker are not instrumented.
+
 Prometheus loads the `ServiceDown` rule from `monitoring/alerts.yml`. It fires when a monitored target cannot be scraped for one minute. Check target health at http://127.0.0.1:9090/targets and alert state at http://127.0.0.1:9090/alerts. No email or other external alert delivery is configured.
 
 To demonstrate the alert:
@@ -326,7 +339,6 @@ We chose these modules because they describe what a document archive for several
 ### Challenges and solutions
 
 - **ghambrec:**
-  - Large PDFs blocked the ingestion pipeline. Text extraction now runs asynchronously, and jobs that time out fail with their own error instead of hanging.
   - The login page caused a 401 on `/users/me`. A separate `/auth/session` endpoint returns either the current user or `null`.
   - After logout, data of the previous user could remain in the browser's memory. The app now reloads completely on logout.
   - Searching many documents needed to stay fast. The search uses trigram and GIN indexes.
@@ -336,11 +348,9 @@ We chose these modules because they describe what a document archive for several
 - **poverbec:**
   - Retrieval had to respect permissions. The SQL query of the AI service was reworked so that only chunks of readable documents are found.
   - OCR and PDF extraction needed cleanup and better error handling until scans and photos were extracted reliably.
-  - TypeORM migrations for the system tags needed a correct `down` step that deletes child tags before parent tags.
 - **cbauer:**
   - The login flow handled a login after another user's session incorrectly. It was fixed so that administrators are recognized correctly.
   - Saving a profile got stuck and permissions were not reloaded after saving. Both were fixed.
-  - Unit tests broke after the return value of the current-user endpoint changed and were updated.
 
 ## Resources
 
