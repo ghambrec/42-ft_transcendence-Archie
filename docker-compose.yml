@@ -226,11 +226,25 @@ services:
     privileged: true
     devices:
       - /dev/kmsg:/dev/kmsg
+    # if rootless docker use rootless docker paths
+    entrypoint:
+      - /bin/sh
+      - -c
+      - |
+        DOCKER_SOCK=/run/docker.sock
+        CONTAINERD_SOCK=/run/containerd/containerd.sock
+        for d in /run/user/*; do
+          if [ -w "$$d/docker.sock" ]; then
+            DOCKER_SOCK="$$d/docker.sock"
+            CONTAINERD_SOCK="$$d/docker/containerd/containerd.sock"
+            break
+          fi
+        done
+        exec /usr/bin/cadvisor -logtostderr -docker="unix://$$DOCKER_SOCK" -containerd="$$CONTAINERD_SOCK"
     volumes:
       - /:/rootfs:ro
-      - /var/run:/var/run:ro
+      - /run:/run:ro
       - /sys:/sys:ro
-      - /var/lib/docker:/var/lib/docker:ro
       - /dev/disk:/dev/disk:ro
     networks:
       - monitoring
